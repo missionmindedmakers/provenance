@@ -134,6 +134,23 @@ Exclude (kept private/commercial):
 - [WebMCP Research](docs/webmcp_research.md)
 - [C2PA Research](docs/c2pa_research.md)
 
+## Quick Start (Spec + Sample App + First Vector)
+
+Scaffolded packages:
+- `packages/spx-prov-spec`
+- `apps/sample-app`
+
+Install and run:
+
+```bash
+pnpm install
+pnpm --filter @provenance/spx-prov-spec test
+pnpm --filter sample-app test
+pnpm --filter sample-app dev
+```
+
+This first implementation slice proves `VEC_L1_OPEN_SIGNED_ACCEPTED` with automated tests and surfaces pass/fail in the sample app Protocol Inspector UI.
+
 ## Intended Audience
 
 This README is primarily for:

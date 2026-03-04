@@ -92,6 +92,17 @@ python3 tools/conformance/validate_vectors.py --manifest vectors/v0.3/manifest.j
 
 This is a vertical-slice workflow: protocol primitive + app behavior + UI evidence together.
 
+## Commands for this repo scaffold
+
+```bash
+pnpm install
+pnpm --filter @provenance/spx-prov-spec test
+pnpm --filter sample-app test
+pnpm --filter sample-app dev
+```
+
+The first two test commands are the machine-checkable proof that `VEC_L1_OPEN_SIGNED_ACCEPTED` passes in this initial implementation slice.
+
 ## Suggested implementation order for fastest visible demo
 
 1. `VEC_L1_OPEN_SIGNED_ACCEPTED`
