@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs'
 
 import {
   ACTIVITY_TYPES,
@@ -8,151 +8,151 @@ import {
   SOURCE_TYPES,
   parseBundle,
   CRP_V0_0_1_SCHEMA,
-  validateBundle,
-} from '../src/index.js';
-import type { CrpBundle } from '../src/types.js';
+  validateBundle
+} from '../src/index.js'
+import type { CrpBundle } from '../src/types.js'
 
 function readFixture(): CrpBundle {
-  const fixtureUrl = new URL('../schema/examples/crp-v0.0.1.document.example.json', import.meta.url);
-  return JSON.parse(readFileSync(fixtureUrl, 'utf8')) as CrpBundle;
+  const fixtureUrl = new URL('../schema/examples/crp-v0.0.1.document.example.json', import.meta.url)
+  return JSON.parse(readFileSync(fixtureUrl, 'utf8')) as CrpBundle
 }
 
 describe('validateBundle', () => {
   it('validates the canonical example fixture', () => {
-    const result = validateBundle(readFixture());
-    expect(result.ok).toBe(true);
-  });
+    const result = validateBundle(readFixture())
+    expect(result.ok).toBe(true)
+  })
 
   it('accepts a minimal valid bundle', () => {
     const result = validateBundle({
       protocolVersion: '0.0.1',
       bundleType: 'document',
-      createdAt: '2026-03-07T20:30:00Z',
-    });
+      createdAt: '2026-03-07T20:30:00Z'
+    })
 
-    expect(result.ok).toBe(true);
-  });
+    expect(result.ok).toBe(true)
+  })
 
   it('reports required top-level fields', () => {
     const result = validateBundle({
       bundleType: 'document',
-      createdAt: '2026-03-07T20:30:00Z',
-    });
+      createdAt: '2026-03-07T20:30:00Z'
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath === '/protocolVersion')).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.instancePath === '/protocolVersion')).toBe(true)
+  })
 
   it('reports invalid bundleType', () => {
-    const bundle = readFixture();
+    const bundle = readFixture()
     const result = validateBundle({
       ...bundle,
-      bundleType: 'invalid',
-    });
+      bundleType: 'invalid'
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath === '/bundleType')).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.instancePath === '/bundleType')).toBe(true)
+  })
 
   it('rejects additional properties', () => {
-    const bundle = readFixture();
+    const bundle = readFixture()
     const result = validateBundle({
       ...bundle,
       document: {
         ...bundle.document,
-        extra: true,
-      },
-    });
+        extra: true
+      }
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.keyword === 'additionalProperties')).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.keyword === 'additionalProperties')).toBe(true)
+  })
 
   it('rejects malformed textHash', () => {
-    const bundle = readFixture();
+    const bundle = readFixture()
     const result = validateBundle({
       ...bundle,
       clips: bundle.clips?.map((clip, index) =>
         index === 0
           ? {
               ...clip,
-              textHash: 'not-a-sha256-hash',
+              textHash: 'not-a-sha256-hash'
             }
-          : clip,
-      ),
-    });
+          : clip
+      )
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/textHash'))).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.instancePath.endsWith('/textHash'))).toBe(true)
+  })
 
   it('rejects malformed date-time', () => {
-    const bundle = readFixture();
+    const bundle = readFixture()
     const result = validateBundle({
       ...bundle,
-      createdAt: 'not-a-date',
-    });
+      createdAt: 'not-a-date'
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath === '/createdAt')).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.instancePath === '/createdAt')).toBe(true)
+  })
 
   it('rejects invalid sourceType and activityType values', () => {
-    const bundle = readFixture();
+    const bundle = readFixture()
     const result = validateBundle({
       ...bundle,
       sources: bundle.sources?.map((source, index) =>
         index === 0
           ? {
               ...source,
-              sourceType: 'bad-source-type',
+              sourceType: 'bad-source-type'
             }
-          : source,
+          : source
       ),
       activities: bundle.activities?.map((activity, index) =>
         index === 0
           ? {
               ...activity,
-              activityType: 'bad-activity-type',
+              activityType: 'bad-activity-type'
             }
-          : activity,
-      ),
-    });
+          : activity
+      )
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/sourceType'))).toBe(true);
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/activityType'))).toBe(true);
-  });
+    expect(result.errors.some((issue) => issue.instancePath.endsWith('/sourceType'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.endsWith('/activityType'))).toBe(true)
+  })
 
   it('rejects clips missing textQuote selector and empty sourceRefs', () => {
-    const bundle = readFixture();
-    const firstClip = bundle.clips?.[0];
+    const bundle = readFixture()
+    const firstClip = bundle.clips?.[0]
     if (!firstClip) {
-      throw new Error('Fixture missing first clip.');
+      throw new Error('Fixture missing first clip.')
     }
 
     const result = validateBundle({
@@ -162,59 +162,59 @@ describe('validateBundle', () => {
           ...firstClip,
           sourceRefs: [],
           selectors: {
-            textPosition: firstClip.selectors.textPosition,
-          },
-        },
-      ],
-    });
+            textPosition: firstClip.selectors.textPosition
+          }
+        }
+      ]
+    })
 
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(false)
     if (result.ok) {
-      return;
+      return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/sourceRefs'))).toBe(true);
-    expect(
-      result.errors.some((issue) => issue.instancePath.endsWith('/selectors/textQuote')),
-    ).toBe(true);
-  });
-});
+    expect(result.errors.some((issue) => issue.instancePath.endsWith('/sourceRefs'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.endsWith('/selectors/textQuote'))).toBe(
+      true
+    )
+  })
+})
 
 describe('parseBundle', () => {
   it('returns typed bundle for valid inputs', () => {
-    const parsed = parseBundle(readFixture());
-    expect(parsed.bundleType).toBe('document');
-  });
+    const parsed = parseBundle(readFixture())
+    expect(parsed.bundleType).toBe('document')
+  })
 
   it('throws CrpValidationError with issue details for invalid input', () => {
     const invalid = {
       protocolVersion: '0.0.1',
       bundleType: 'invalid',
-      createdAt: 'bad-date',
-    };
+      createdAt: 'bad-date'
+    }
 
-    const validateResult = validateBundle(invalid);
-    expect(validateResult.ok).toBe(false);
+    const validateResult = validateBundle(invalid)
+    expect(validateResult.ok).toBe(false)
     if (validateResult.ok) {
-      return;
+      return
     }
 
     try {
-      parseBundle(invalid);
-      throw new Error('Expected parseBundle to throw.');
+      parseBundle(invalid)
+      throw new Error('Expected parseBundle to throw.')
     } catch (error) {
-      expect(error).toBeInstanceOf(CrpValidationError);
-      const typed = error as CrpValidationError;
-      expect(typed.issues).toEqual(validateResult.errors);
+      expect(error).toBeInstanceOf(CrpValidationError)
+      const typed = error as CrpValidationError
+      expect(typed.issues).toEqual(validateResult.errors)
     }
-  });
-});
+  })
+})
 
 describe('schema enum constants', () => {
   it('matches schema enum definitions', () => {
-    expect(BUNDLE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.properties.bundleType.enum);
-    expect(SOURCE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.sourceRecord.properties.sourceType.enum);
-    expect(AGENT_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.agent.properties.agentType.enum);
-    expect(ACTIVITY_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.activity.properties.activityType.enum);
-  });
-});
+    expect(BUNDLE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.properties.bundleType.enum)
+    expect(SOURCE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.sourceRecord.properties.sourceType.enum)
+    expect(AGENT_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.agent.properties.agentType.enum)
+    expect(ACTIVITY_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.activity.properties.activityType.enum)
+  })
+})

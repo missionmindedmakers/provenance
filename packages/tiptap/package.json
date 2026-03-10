@@ -1,0 +1,45 @@
+{
+  "name": "@cliproot/tiptap",
+  "version": "0.0.1",
+  "description": "ClipRoot Protocol attribution extension for Tiptap",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "pnpm run typecheck"
+  },
+  "peerDependencies": {
+    "@tiptap/core": "^2.0.0",
+    "prosemirror-model": "^1.19.0",
+    "prosemirror-state": "^1.4.0",
+    "prosemirror-view": "^1.30.0"
+  },
+  "devDependencies": {
+    "@tiptap/core": "^2.11.5",
+    "prosemirror-model": "^1.24.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.37.2",
+    "typescript": "5.7.3",
+    "vitest": "3.0.5"
+  }
+}
