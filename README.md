@@ -114,6 +114,22 @@ pnpm --filter @cliproot/tiptap typecheck
 pnpm --filter @cliproot/tiptap test
 ```
 
+## Formatting
+
+This project uses Prettier for consistent code formatting.
+
+To format all files across packages:
+
+```bash
+pnpm run format
+```
+
+To check formatting without writing (useful for CI):
+
+```bash
+pnpm run format:check
+```
+
 ## Schema Sync/Verification
 
 `@cliproot/protocol` keeps its packaged schema files in sync with root schema artifacts.

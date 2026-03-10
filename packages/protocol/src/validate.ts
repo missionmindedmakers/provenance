@@ -1,36 +1,36 @@
-import type { ErrorObject } from 'ajv';
-import { Ajv2020 } from 'ajv/dist/2020.js';
-import * as addFormatsPlugin from 'ajv-formats';
+import type { ErrorObject } from 'ajv'
+import { Ajv2020 } from 'ajv/dist/2020.js'
+import * as addFormatsPlugin from 'ajv-formats'
 
-import { CRP_V0_0_1_SCHEMA } from './schema.js';
-import type { CrpBundle } from './types.js';
+import { CRP_V0_0_1_SCHEMA } from './schema.js'
+import type { CrpBundle } from './types.js'
 
 export interface ValidationIssue {
-  instancePath: string;
-  schemaPath: string;
-  keyword: string;
-  message: string;
+  instancePath: string
+  schemaPath: string
+  keyword: string
+  message: string
 }
 
 export interface ValidationSuccess<T> {
-  ok: true;
-  value: T;
+  ok: true
+  value: T
 }
 
 export interface ValidationFailure {
-  ok: false;
-  errors: ValidationIssue[];
+  ok: false
+  errors: ValidationIssue[]
 }
 
-export type ValidationResult<T> = ValidationSuccess<T> | ValidationFailure;
+export type ValidationResult<T> = ValidationSuccess<T> | ValidationFailure
 
 export class CrpValidationError extends Error {
-  issues: ValidationIssue[];
+  issues: ValidationIssue[]
 
   constructor(issues: ValidationIssue[], message = 'CRP bundle validation failed.') {
-    super(message);
-    this.name = 'CrpValidationError';
-    this.issues = issues;
+    super(message)
+    this.name = 'CrpValidationError'
+    this.issues = issues
   }
 }
 
@@ -40,27 +40,27 @@ export class SppValidationError extends CrpValidationError {}
 const ajv = new Ajv2020({
   strict: true,
   allErrors: true,
-  validateFormats: true,
-});
+  validateFormats: true
+})
 
-const addFormats = addFormatsPlugin as unknown as { default: (instance: Ajv2020) => void };
-addFormats.default(ajv);
+const addFormats = addFormatsPlugin as unknown as { default: (instance: Ajv2020) => void }
+addFormats.default(ajv)
 
-const validateCompiled = ajv.compile(CRP_V0_0_1_SCHEMA);
+const validateCompiled = ajv.compile(CRP_V0_0_1_SCHEMA)
 
 function pointerJoin(basePath: string, key: string): string {
-  const normalizedBase = basePath || '';
-  const escapedKey = key.replace(/~/g, '~0').replace(/\//g, '~1');
-  return `${normalizedBase}/${escapedKey}`;
+  const normalizedBase = basePath || ''
+  const escapedKey = key.replace(/~/g, '~0').replace(/\//g, '~1')
+  return `${normalizedBase}/${escapedKey}`
 }
 
 function toValidationIssue(error: ErrorObject): ValidationIssue {
-  let instancePath = error.instancePath || '';
+  let instancePath = error.instancePath || ''
 
   if (error.keyword === 'required') {
-    const params = error.params as { missingProperty?: string };
+    const params = error.params as { missingProperty?: string }
     if (params.missingProperty) {
-      instancePath = pointerJoin(instancePath, params.missingProperty);
+      instancePath = pointerJoin(instancePath, params.missingProperty)
     }
   }
 
@@ -68,35 +68,35 @@ function toValidationIssue(error: ErrorObject): ValidationIssue {
     instancePath,
     schemaPath: error.schemaPath,
     keyword: error.keyword,
-    message: error.message ?? 'Validation error',
-  };
+    message: error.message ?? 'Validation error'
+  }
 }
 
 function collectIssues(errors: ErrorObject[] | null | undefined): ValidationIssue[] {
-  return (errors ?? []).map(toValidationIssue);
+  return (errors ?? []).map(toValidationIssue)
 }
 
 export function validateBundle(input: unknown): ValidationResult<CrpBundle> {
-  const valid = validateCompiled(input);
+  const valid = validateCompiled(input)
 
   if (valid) {
     return {
       ok: true,
-      value: input as CrpBundle,
-    };
+      value: input as CrpBundle
+    }
   }
 
   return {
     ok: false,
-    errors: collectIssues(validateCompiled.errors),
-  };
+    errors: collectIssues(validateCompiled.errors)
+  }
 }
 
 export function parseBundle(input: unknown): CrpBundle {
-  const result = validateBundle(input);
+  const result = validateBundle(input)
   if (!result.ok) {
-    throw new CrpValidationError(result.errors);
+    throw new CrpValidationError(result.errors)
   }
 
-  return result.value;
+  return result.value
 }

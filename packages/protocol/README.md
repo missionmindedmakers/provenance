@@ -15,15 +15,15 @@ pnpm add @cliproot/protocol
 ## Usage
 
 ```ts
-import { createTextHash, parseBundle, validateBundle } from '@cliproot/protocol';
+import { createTextHash, parseBundle, validateBundle } from '@cliproot/protocol'
 
-const result = validateBundle(payload);
+const result = validateBundle(payload)
 if (!result.ok) {
-  console.error(result.errors);
+  console.error(result.errors)
 }
 
-const parsed = parseBundle(payload);
-const textHash = createTextHash('Provenance starts here.');
+const parsed = parseBundle(payload)
+const textHash = createTextHash('Provenance starts here.')
 ```
 
 ## Schema Source of Truth

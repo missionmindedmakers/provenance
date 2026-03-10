@@ -12,11 +12,14 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "turbo run lint",
+    "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx,js,jsx,json,md}\"",
     "changeset": "pnpm dlx @changesets/cli@2.29.6 changeset",
     "version-packages": "pnpm dlx @changesets/cli@2.29.6 version",
     "release": "pnpm dlx @changesets/cli@2.29.6 publish"
   },
   "devDependencies": {
+    "prettier": "^3.8.1",
     "turbo": "2.4.2",
     "typescript": "5.7.3"
   }
