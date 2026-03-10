@@ -11,6 +11,7 @@ This repository is the public ClipRoot monorepo.
 It currently includes:
 - the CRP (`ClipRoot Protocol`) `v0.0.1` schema and research artifacts,
 - `@cliproot/protocol`, a TypeScript package for schema-backed validation, generated protocol types, and deterministic text hashing,
+- `@cliproot/tiptap`, a Tiptap extension for managing span-level provenance and attribution,
 - monorepo tooling for building and testing public SDK packages.
 
 Planned next packages include editor and handshake-focused SDKs (see `research/high_level_plan_march_7_2026.md`).
@@ -39,8 +40,31 @@ The generated schema constants and types are available in:
 cliproot/
   packages/
     protocol/      # @cliproot/protocol
+    tiptap/        # @cliproot/tiptap
   schema/          # canonical schema artifacts and examples
   research/        # product/protocol planning notes
+```
+
+### Using `@cliproot/tiptap`
+
+```ts
+import { Editor } from '@tiptap/core'
+import StarterKit from '@tiptap/starter-kit'
+import { AttributionExtension } from '@cliproot/tiptap'
+
+const editor = new Editor({
+  extensions: [
+    StarterKit,
+    AttributionExtension.configure({
+      onReuseDetected: (event) => {
+        console.log('Reuse detected for provenance ID:', event.provenanceId)
+      }
+    })
+  ]
+})
+
+// Set attribution on current selection
+editor.commands.setAttribution('prov_123')
 ```
 
 ## Prerequisites
@@ -64,10 +88,11 @@ pnpm build
 
 This runs Turborepo build tasks across workspace packages.
 
-## Build Only `@cliproot/protocol`
+## Build Specific Packages
 
 ```bash
 pnpm --filter @cliproot/protocol build
+pnpm --filter @cliproot/tiptap build
 ```
 
 ## Run Typecheck and Tests
@@ -77,11 +102,16 @@ pnpm typecheck
 pnpm test
 ```
 
-Or target only the protocol package:
+Or target specific packages:
 
 ```bash
+# Protocol package
 pnpm --filter @cliproot/protocol typecheck
 pnpm --filter @cliproot/protocol test
+
+# Tiptap package
+pnpm --filter @cliproot/tiptap typecheck
+pnpm --filter @cliproot/tiptap test
 ```
 
 ## Schema Sync/Verification
