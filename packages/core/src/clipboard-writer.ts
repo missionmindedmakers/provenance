@@ -1,4 +1,4 @@
-import type { CrpBundle } from '@cliproot/protocol'
+import type { CrpBundle } from '@cliproot/protocol/types'
 import type { ClipboardWriteOptions } from './types.js'
 import { escapeAttr } from './html-utils.js'
 

@@ -7,6 +7,7 @@ export default defineConfig({
     name: 'ClipRoot',
     description: 'Capture clipboard provenance with the ClipRoot Protocol',
     permissions: ['clipboardWrite', 'activeTab', 'storage'],
+    optional_permissions: ['clipboardRead'],
     host_permissions: ['<all_urls>'],
   },
 })

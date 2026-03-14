@@ -1,12 +1,12 @@
 import {
   createTextHash,
   createClipHash,
-  CRP_PROTOCOL_VERSION,
   toBase64Url,
-} from '@cliproot/protocol'
+} from '@cliproot/protocol/hash'
+import { CRP_PROTOCOL_VERSION } from '@cliproot/protocol/schema-meta'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { utf8ToBytes } from '@noble/hashes/utils.js'
-import type { CrpBundle } from '@cliproot/protocol'
+import type { CrpBundle } from '@cliproot/protocol/types'
 import type { CapturedSelection, DocumentInfo } from './types.js'
 
 function generateDocumentId(uri: string): string {

@@ -1,4 +1,5 @@
-import type { ClipCapturedMessage, RecentClip } from '../types'
+import type { ClipCapturedMessage, PasteDetectedMessage, RecentClip } from '../types'
+import { storeClip, storePaste, findClipsByTextHash } from '../db'
 
 const tabClipCounts = new Map<number, number>()
 
@@ -24,10 +25,16 @@ export default defineBackground(() => {
     }
   })
 
-  // Handle clip-captured messages from content scripts
-  chrome.runtime.onMessage.addListener((message: ClipCapturedMessage, sender) => {
-    if (message.type !== 'clip-captured') return
+  // Handle messages from content scripts
+  chrome.runtime.onMessage.addListener((message: ClipCapturedMessage | PasteDetectedMessage, sender) => {
+    if (message.type === 'clip-captured') {
+      handleClipCaptured(message, sender)
+    } else if (message.type === 'paste-detected') {
+      handlePasteDetected(message)
+    }
+  })
 
+  function handleClipCaptured(message: ClipCapturedMessage, sender: chrome.runtime.MessageSender) {
     const tabId = sender.tab?.id
     if (tabId === undefined) return
 
@@ -50,6 +57,20 @@ export default defineBackground(() => {
       chrome.storage.local.set({ recentClips: updated })
     })
 
+    // Store in IndexedDB
+    storeClip({
+      textHash: message.textHash,
+      url: message.url,
+      hostname: message.hostname,
+      title: message.title,
+      timestamp: Date.now(),
+      textPreview: message.textPreview,
+      fullText: message.fullText,
+      bundleJson: message.bundleJson,
+    }).catch(() => {
+      // Best-effort — IndexedDB may be unavailable
+    })
+
     // Update badge with count
     chrome.storage.local.get(['enabled', 'siteSettings'], (result: Record<string, unknown>) => {
       const globalEnabled = result.enabled !== false
@@ -58,7 +79,41 @@ export default defineBackground(() => {
       const effective = effectiveEnabled(globalEnabled, hostname, siteSettings)
       updateBadge(effective, count, tabId)
     })
-  })
+  }
+
+  function handlePasteDetected(message: PasteDetectedMessage) {
+    findClipsByTextHash(message.textHash).then((matchedClips) => {
+      let matchMethod: 'bundle' | 'hash' | 'none'
+      let sourceClipId: number | null = null
+
+      if (message.bundleJson) {
+        matchMethod = 'bundle'
+        // Still try to link to a stored clip if we have a hash match
+        if (matchedClips.length > 0) {
+          sourceClipId = matchedClips[0].id ?? null
+        }
+      } else if (matchedClips.length > 0) {
+        matchMethod = 'hash'
+        sourceClipId = matchedClips[0].id ?? null
+      } else {
+        matchMethod = 'none'
+      }
+
+      return storePaste({
+        textHash: message.textHash,
+        sourceClipId,
+        url: message.url,
+        hostname: message.hostname,
+        title: message.title,
+        timestamp: Date.now(),
+        textPreview: message.textPreview,
+        bundleJson: message.bundleJson,
+        matchMethod,
+      })
+    }).catch(() => {
+      // Best-effort — IndexedDB may be unavailable
+    })
+  }
 
   // Refresh badge when user switches tabs
   chrome.tabs.onActivated.addListener(({ tabId }) => {

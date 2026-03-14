@@ -1,3 +1,4 @@
+export { parseBundleFromHtml } from './clipboard-reader.js'
 export { captureSelection } from './selection.js'
 export { buildClipboardBundle } from './bundle-builder.js'
 export { writeProvenanceToClipboard, writeCustomFormatToClipboard } from './clipboard-writer.js'

@@ -1,6 +1,8 @@
-import { captureSelection, buildClipboardBundle, writeProvenanceToClipboard, writeCustomFormatToClipboard } from '@cliproot/core'
+import { captureSelection, buildClipboardBundle, writeProvenanceToClipboard, writeCustomFormatToClipboard, parseBundleFromHtml } from '@cliproot/core'
 import type { CapturedSelection } from '@cliproot/core'
-import type { CrpBundle } from '@cliproot/protocol'
+import { createTextHash } from '@cliproot/protocol/hash'
+import type { CrpBundle } from '@cliproot/protocol/types'
+import type { ClipCapturedMessage, PasteDetectedMessage } from '../types'
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -98,12 +100,41 @@ export default defineContentScript({
           url: window.location.href,
           title: document.title,
           textPreview: pendingCapture.captured.text?.substring(0, 80) ?? '',
-        })
+          textHash: pendingCapture.bundle.clips[0].textHash,
+          fullText: pendingCapture.captured.text ?? '',
+          bundleJson: JSON.stringify(pendingCapture.bundle),
+        } satisfies ClipCapturedMessage)
 
         pendingCapture = null
       },
       { capture: false }
     )
+
+    // Paste detection — capture phase, READ-ONLY (never preventDefault)
+    document.addEventListener('paste', (event: ClipboardEvent) => {
+      if (!isEnabled() || !event.clipboardData) return
+      const plainText = event.clipboardData.getData('text/plain')
+      if (!plainText) return
+
+      const html = event.clipboardData.getData('text/html')
+      let bundleJson: string | null = null
+      if (html) {
+        const bundle = parseBundleFromHtml(html)
+        if (bundle) bundleJson = JSON.stringify(bundle)
+      }
+
+      const textHash = createTextHash(plainText)
+
+      chrome.runtime.sendMessage({
+        type: 'paste-detected',
+        hostname: location.hostname,
+        url: window.location.href,
+        title: document.title,
+        textPreview: plainText.substring(0, 80),
+        textHash,
+        bundleJson,
+      } satisfies PasteDetectedMessage)
+    }, { capture: true })
 
     // Phase 3: Fallback — if bubble listener never fired (site called stopImmediatePropagation),
     // use setTimeout + Async Clipboard API as best-effort fallback

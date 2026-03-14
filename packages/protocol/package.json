@@ -12,6 +12,22 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./hash": {
+      "types": "./dist/hash.d.ts",
+      "import": "./dist/hash.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./dist/constants.js"
+    },
+    "./schema-meta": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
     "./schema": "./schema/crp-v0.0.1.schema.json",
     "./schema/examples/crp-v0.0.1.document.example.json": "./schema/examples/crp-v0.0.1.document.example.json",
     "./package.json": "./package.json"
