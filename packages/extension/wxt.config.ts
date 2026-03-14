@@ -2,6 +2,7 @@ import { defineConfig } from 'wxt'
 
 export default defineConfig({
   srcDir: 'src',
+  browser: process.env.TARGET_BROWSER as 'chrome' | 'firefox' | undefined,
   manifest: {
     name: 'ClipRoot',
     description: 'Capture clipboard provenance with the ClipRoot Protocol',

@@ -6,7 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
+    "dev:firefox": "TARGET_BROWSER=firefox wxt",
     "build": "wxt build",
+    "build:firefox": "TARGET_BROWSER=firefox wxt build",
+    "build:all": "wxt build && TARGET_BROWSER=firefox wxt build",
+    "zip:chrome": "wxt zip",
+    "zip:firefox": "TARGET_BROWSER=firefox wxt zip",
     "typecheck": "wxt prepare && tsc --noEmit"
   },
   "dependencies": {

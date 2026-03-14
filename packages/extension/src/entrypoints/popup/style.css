@@ -33,3 +33,62 @@ h1 {
 #toggle:hover {
   background: #e5e5e5;
 }
+
+#recent-clips {
+  margin-top: 12px;
+  text-align: left;
+}
+
+#recent-clips h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin: 0 0 6px;
+}
+
+#clips-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#clips-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+}
+
+#clips-list li:last-child {
+  border-bottom: none;
+}
+
+.clip-preview {
+  color: #333;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip-meta {
+  color: #999;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.clips-empty {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+#open-settings {
+  display: block;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}

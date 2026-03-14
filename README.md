@@ -13,7 +13,7 @@ It currently includes:
 - `@cliproot/protocol`, a TypeScript package for schema-backed validation, generated protocol types, and deterministic text hashing,
 - `@cliproot/core`, a browser-compatible SDK for capturing clipboard provenance on copy events,
 - `@cliproot/tiptap`, a Tiptap extension for managing span-level provenance and attribution,
-- `@cliproot/extension`, a WXT-based Chrome extension that intercepts copy events and writes CRP bundles,
+- `@cliproot/extension`, a WXT-based extension that intercepts copy events and writes CRP bundles,
 - monorepo tooling for building and testing public SDK packages.
 
 ## Protocol Overview
@@ -42,7 +42,7 @@ cliproot/
     protocol/      # @cliproot/protocol — schema validation, types, hashing
     core/          # @cliproot/core     — browser SDK for copy-side provenance capture
     tiptap/        # @cliproot/tiptap   — Tiptap attribution extension
-    extension/     # @cliproot/extension — Chrome extension (WXT, MV3)
+    extension/     # @cliproot/extension — Browser extension (WXT, MV3)
   schema/          # canonical schema artifacts and examples
   research/        # product/protocol planning notes
 ```
@@ -82,23 +82,52 @@ The bundle is written as a hidden `<div data-crp-bundle="...">` appended to the 
 
 ### Using `@cliproot/extension`
 
-The Chrome extension automates the above for every page without requiring site-side integration.
+The browser extension automates the above for every page without requiring site-side integration. It supports both Chrome and Firefox.
 
 **Development:**
 
 ```bash
+# Chrome
 pnpm --filter @cliproot/extension dev
+
+# Firefox
+pnpm --filter @cliproot/extension dev:firefox
 ```
 
-Load the `.output/chrome-mv3/` directory in Chrome via **Settings → Extensions → Load unpacked**.
+**Loading in Chrome:**
+
+Load the `.output/chrome-mv3/` directory via **Settings → Extensions → Load unpacked**.
+
+**Loading in Firefox:**
+
+1. Build the Firefox target: `pnpm --filter @cliproot/extension build:firefox`
+2. Open `about:debugging` in Firefox
+3. Click **This Firefox** → **Load Temporary Add-on**
+4. Select any file inside `.output/firefox-mv2/`
+
+**Production builds:**
+
+```bash
+# Build both targets
+pnpm --filter @cliproot/extension build:all
+
+# Create zip archives for distribution
+pnpm --filter @cliproot/extension zip:chrome
+pnpm --filter @cliproot/extension zip:firefox
+```
 
 **How it works:**
 
 1. A capture-phase copy listener snapshots the selection and builds a CRP bundle before the site's handler runs.
 2. A bubble-phase listener augments whatever HTML the site wrote with the hidden provenance div, then calls `preventDefault()`.
-3. If the site suppressed bubbling (`stopImmediatePropagation`), a best-effort fallback uses the Async Clipboard API.
+3. If the site suppressed bubbling (`stopImmediatePropagation`), a best-effort fallback uses the Async Clipboard API (Chrome only — Firefox does not support `navigator.clipboard.read()`).
 
-**Toggle:** Click the extension icon to open the popup and enable/disable capture. The badge shows `ON` (green) or `OFF` (gray).
+**Features:**
+
+- **Per-site controls:** Enable or disable capture for individual sites from the popup.
+- **Clip count badge:** The badge shows the number of clips captured in the current tab (green), or "OFF" (gray) when disabled.
+- **Recent clips:** The popup displays the last 10 clips with text previews and timestamps.
+- **Options page:** Manage all per-site overrides from a dedicated settings page.
 
 ### Using `@cliproot/tiptap`
 

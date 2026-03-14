@@ -91,6 +91,15 @@ export default defineContentScript({
         const bundle = pendingCapture.bundle
         writeCustomFormatToClipboard(bundle, plainText, augmentedHtml)
 
+        // Notify background about the captured clip
+        chrome.runtime.sendMessage({
+          type: 'clip-captured',
+          hostname: location.hostname,
+          url: window.location.href,
+          title: document.title,
+          textPreview: pendingCapture.captured.text?.substring(0, 80) ?? '',
+        })
+
         pendingCapture = null
       },
       { capture: false }
@@ -107,6 +116,9 @@ export default defineContentScript({
 
         setTimeout(async () => {
           if (bubbleListenerFired) return
+
+          // Firefox doesn't support navigator.clipboard.read()
+          if (typeof navigator.clipboard?.read !== 'function') return
 
           try {
             const [existing] = await navigator.clipboard.read()
