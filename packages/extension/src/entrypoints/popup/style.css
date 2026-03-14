@@ -85,6 +85,183 @@ h1 {
   font-style: italic;
 }
 
+#clip-search {
+  margin-top: 12px;
+  text-align: left;
+}
+
+#search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+#search-results {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+#search-results:empty {
+  display: none;
+}
+
+#search-results li {
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#search-results li:hover {
+  background: #f5f5f5;
+}
+
+#page-sources {
+  margin-top: 12px;
+  text-align: left;
+}
+
+#page-sources h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin: 0 0 6px;
+}
+
+#sources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+#sources-list:empty::after {
+  content: 'No sources detected';
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+#sources-list li {
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#sources-list li:hover {
+  background: #f5f5f5;
+}
+
+.source-hostname {
+  font-weight: 600;
+  color: #333;
+}
+
+.source-count {
+  color: #999;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+#generate-bib {
+  margin-top: 6px;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+#generate-bib:hover {
+  background: #e5e5e5;
+}
+
+#clip-detail {
+  text-align: left;
+}
+
+#clip-detail h2 {
+  font-size: 13px;
+  margin: 8px 0 6px;
+}
+
+#detail-back {
+  border: none;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+}
+
+#detail-back:hover {
+  color: #333;
+}
+
+#detail-content {
+  font-size: 12px;
+}
+
+.detail-field {
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.detail-text {
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.detail-paste-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.detail-paste-list li {
+  padding: 3px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 11px;
+  color: #555;
+}
+
+#clips-list li {
+  cursor: pointer;
+}
+
+#clips-list li:hover {
+  background: #f5f5f5;
+}
+
+.bib-feedback {
+  color: #22c55e;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
 #open-settings {
   display: block;
   margin-top: 12px;

@@ -53,3 +53,50 @@ export interface RecentClip {
 }
 
 export type SiteSettings = Record<string, boolean | 'default'>
+
+export interface GetPageSourcesRequest {
+  type: 'get-page-sources'
+  url: string
+}
+
+export interface PageSource {
+  hostname: string
+  url: string
+  title: string
+  clipCount: number
+  clips: Array<{ id: number; textPreview: string; timestamp: number }>
+}
+
+export interface GetPageSourcesResponse {
+  sources: PageSource[]
+}
+
+export interface GenerateBibliographyRequest {
+  type: 'generate-bibliography'
+  url: string
+  format: 'markdown' | 'numbered' | 'plain'
+}
+
+export interface GenerateBibliographyResponse {
+  text: string
+  sourceCount: number
+}
+
+export interface GetClipDetailRequest {
+  type: 'get-clip-detail'
+  clipId: number
+}
+
+export interface GetClipDetailResponse {
+  clip: StoredClip | null
+  pastes: PasteRecord[]
+}
+
+export interface SearchClipsRequest {
+  type: 'search-clips'
+  query: string
+}
+
+export interface SearchClipsResponse {
+  clips: StoredClip[]
+}

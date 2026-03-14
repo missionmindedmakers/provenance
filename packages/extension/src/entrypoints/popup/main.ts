@@ -1,4 +1,13 @@
-import type { RecentClip } from '../../types'
+import type {
+  RecentClip,
+  PageSource,
+  GetPageSourcesResponse,
+  GenerateBibliographyResponse,
+  GetClipDetailResponse,
+  SearchClipsResponse,
+  StoredClip,
+  PasteRecord,
+} from '../../types'
 
 const statusEl = document.getElementById('status')!
 const toggleBtn = document.getElementById('toggle')!
@@ -8,6 +17,15 @@ const siteToggleGroup = document.getElementById('site-toggle-group')!
 const effectiveStatusEl = document.getElementById('effective-status')!
 const clipsList = document.getElementById('clips-list')!
 const settingsLink = document.getElementById('open-settings')!
+const sourcesList = document.getElementById('sources-list')!
+const generateBibBtn = document.getElementById('generate-bib')!
+const pageSourcesSection = document.getElementById('page-sources')!
+const clipDetailSection = document.getElementById('clip-detail')!
+const detailBackBtn = document.getElementById('detail-back')!
+const detailContent = document.getElementById('detail-content')!
+const searchInput = document.getElementById('search-input') as HTMLInputElement
+const searchResults = document.getElementById('search-results')!
+const recentClipsSection = document.getElementById('recent-clips')!
 
 let currentHostname = ''
 let globalEnabled = true
@@ -90,6 +108,193 @@ function renderRecentClips(clips: RecentClip[]) {
   }
 }
 
+let currentTabUrl = ''
+
+function loadPageSources(url: string) {
+  chrome.runtime.sendMessage(
+    { type: 'get-page-sources', url },
+    (response: GetPageSourcesResponse) => {
+      if (!response) return
+      renderSources(response.sources)
+    }
+  )
+}
+
+function renderSources(sources: PageSource[]) {
+  sourcesList.innerHTML = ''
+  generateBibBtn.style.display = sources.length > 0 ? 'inline-block' : 'none'
+
+  for (const source of sources) {
+    const li = document.createElement('li')
+
+    const hostname = document.createElement('span')
+    hostname.className = 'source-hostname'
+    hostname.textContent = source.title || source.hostname
+
+    const count = document.createElement('span')
+    count.className = 'source-count'
+    count.textContent = `(${source.clipCount} clip${source.clipCount !== 1 ? 's' : ''})`
+
+    li.append(hostname, count)
+    li.addEventListener('click', () => {
+      if (source.clips.length > 0) {
+        showClipDetail(source.clips[0].id)
+      }
+    })
+    sourcesList.appendChild(li)
+  }
+}
+
+function generateBibliography() {
+  chrome.runtime.sendMessage(
+    { type: 'generate-bibliography', url: currentTabUrl, format: 'markdown' },
+    (response: GenerateBibliographyResponse) => {
+      if (!response || response.sourceCount === 0) return
+      navigator.clipboard.writeText(response.text).then(() => {
+        const feedback = document.createElement('span')
+        feedback.className = 'bib-feedback'
+        feedback.textContent = 'Copied!'
+        generateBibBtn.after(feedback)
+        setTimeout(() => feedback.remove(), 2000)
+      })
+    }
+  )
+}
+
+function showClipDetail(clipId: number) {
+  chrome.runtime.sendMessage(
+    { type: 'get-clip-detail', clipId },
+    (response: GetClipDetailResponse) => {
+      if (!response || !response.clip) return
+      renderClipDetail(response.clip as StoredClip, response.pastes as PasteRecord[])
+    }
+  )
+}
+
+function renderClipDetail(clip: StoredClip, pastes: PasteRecord[]) {
+  // Hide main sections, show detail
+  recentClipsSection.style.display = 'none'
+  pageSourcesSection.style.display = 'none'
+  document.getElementById('clip-search')!.style.display = 'none'
+  clipDetailSection.style.display = 'block'
+
+  detailContent.innerHTML = ''
+
+  // Source info
+  const sourceField = createDetailField('Source', `${clip.title || clip.hostname}\n${clip.url}`)
+  detailContent.appendChild(sourceField)
+
+  // Full text
+  const textField = createDetailField('Text', clip.fullText || clip.textPreview)
+  detailContent.appendChild(textField)
+
+  // Timestamp
+  const timeField = createDetailField('Copied', new Date(clip.timestamp).toLocaleString())
+  detailContent.appendChild(timeField)
+
+  // Paste locations
+  if (pastes.length > 0) {
+    const pasteField = document.createElement('div')
+    pasteField.className = 'detail-field'
+
+    const label = document.createElement('div')
+    label.className = 'detail-label'
+    label.textContent = `Pasted ${pastes.length} time${pastes.length !== 1 ? 's' : ''}`
+    pasteField.appendChild(label)
+
+    const list = document.createElement('ul')
+    list.className = 'detail-paste-list'
+    for (const paste of pastes) {
+      const li = document.createElement('li')
+      li.textContent = `${paste.title || paste.hostname} \u00b7 ${relativeTime(paste.timestamp)}`
+      list.appendChild(li)
+    }
+    pasteField.appendChild(list)
+    detailContent.appendChild(pasteField)
+  }
+}
+
+function createDetailField(label: string, text: string): HTMLElement {
+  const field = document.createElement('div')
+  field.className = 'detail-field'
+
+  const labelEl = document.createElement('div')
+  labelEl.className = 'detail-label'
+  labelEl.textContent = label
+
+  const textEl = document.createElement('div')
+  textEl.className = 'detail-text'
+  textEl.textContent = text
+
+  field.append(labelEl, textEl)
+  return field
+}
+
+function hideClipDetail() {
+  clipDetailSection.style.display = 'none'
+  recentClipsSection.style.display = ''
+  pageSourcesSection.style.display = ''
+  document.getElementById('clip-search')!.style.display = ''
+}
+
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
+
+function handleSearchInput() {
+  const query = searchInput.value.trim()
+  if (searchDebounce) clearTimeout(searchDebounce)
+
+  if (!query) {
+    searchResults.innerHTML = ''
+    return
+  }
+
+  searchDebounce = setTimeout(() => {
+    chrome.runtime.sendMessage(
+      { type: 'search-clips', query },
+      (response: SearchClipsResponse) => {
+        if (!response) return
+        renderSearchResults(response.clips as StoredClip[])
+      }
+    )
+  }, 300)
+}
+
+function renderSearchResults(clips: StoredClip[]) {
+  searchResults.innerHTML = ''
+
+  if (clips.length === 0) {
+    const li = document.createElement('li')
+    li.textContent = 'No results'
+    li.style.color = '#999'
+    li.style.cursor = 'default'
+    searchResults.appendChild(li)
+    return
+  }
+
+  for (const clip of clips.slice(0, 20)) {
+    const li = document.createElement('li')
+
+    const preview = document.createElement('span')
+    preview.className = 'clip-preview'
+    preview.textContent = clip.textPreview || '(no text)'
+
+    const meta = document.createElement('span')
+    meta.className = 'clip-meta'
+    meta.textContent = `${clip.hostname} \u00b7 ${relativeTime(clip.timestamp)}`
+
+    li.append(preview, meta)
+    li.addEventListener('click', () => {
+      if (clip.id !== undefined) showClipDetail(clip.id)
+    })
+    searchResults.appendChild(li)
+  }
+}
+
+// Wire event handlers
+generateBibBtn.addEventListener('click', generateBibliography)
+detailBackBtn.addEventListener('click', hideClipDetail)
+searchInput.addEventListener('input', handleSearchInput)
+
 function loadState() {
   chrome.storage.local.get(['enabled', 'siteSettings', 'recentClips'], (result: Record<string, unknown>) => {
     globalEnabled = result.enabled !== false
@@ -146,15 +351,20 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   const tab = tabs[0]
   if (!tab?.url || isRestrictedUrl(tab.url)) {
     siteControls.style.display = 'none'
+    pageSourcesSection.style.display = 'none'
     loadState()
     return
   }
 
   try {
     currentHostname = new URL(tab.url).hostname
+    currentTabUrl = tab.url
   } catch {
     siteControls.style.display = 'none'
   }
 
   loadState()
+  if (currentTabUrl) {
+    loadPageSources(currentTabUrl)
+  }
 })

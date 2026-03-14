@@ -1,5 +1,22 @@
-import type { ClipCapturedMessage, PasteDetectedMessage, RecentClip } from '../types'
-import { storeClip, storePaste, findClipsByTextHash } from '../db'
+import type {
+  ClipCapturedMessage,
+  PasteDetectedMessage,
+  RecentClip,
+  GetPageSourcesRequest,
+  GenerateBibliographyRequest,
+  GetClipDetailRequest,
+  SearchClipsRequest,
+  PageSource,
+} from '../types'
+import {
+  storeClip,
+  storePaste,
+  findClipsByTextHash,
+  findPastesByUrl,
+  getClipById,
+  searchClips,
+  findPastesBySourceClipId,
+} from '../db'
 
 const tabClipCounts = new Map<number, number>()
 
@@ -8,6 +25,12 @@ export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.set({ enabled: true, siteSettings: {}, recentClips: [] })
     updateBadge(true, 0)
+
+    chrome.contextMenus.create({
+      id: 'cliproot-generate-bibliography',
+      title: 'Generate bibliography',
+      contexts: ['page'],
+    })
   })
 
   // Sync badge with storage state on startup
@@ -25,14 +48,128 @@ export default defineBackground(() => {
     }
   })
 
-  // Handle messages from content scripts
-  chrome.runtime.onMessage.addListener((message: ClipCapturedMessage | PasteDetectedMessage, sender) => {
-    if (message.type === 'clip-captured') {
-      handleClipCaptured(message, sender)
-    } else if (message.type === 'paste-detected') {
-      handlePasteDetected(message)
+  // Handle messages from content scripts and popup
+  type MessageType =
+    | ClipCapturedMessage
+    | PasteDetectedMessage
+    | GetPageSourcesRequest
+    | GenerateBibliographyRequest
+    | GetClipDetailRequest
+    | SearchClipsRequest
+
+  chrome.runtime.onMessage.addListener(
+    (message: MessageType, sender, sendResponse: (response: unknown) => void) => {
+      if (message.type === 'clip-captured') {
+        handleClipCaptured(message, sender)
+      } else if (message.type === 'paste-detected') {
+        handlePasteDetected(message)
+      } else if (message.type === 'get-page-sources') {
+        handleGetPageSources(message.url).then(sendResponse)
+        return true
+      } else if (message.type === 'generate-bibliography') {
+        handleGenerateBibliography(message.url, message.format).then(sendResponse)
+        return true
+      } else if (message.type === 'get-clip-detail') {
+        handleGetClipDetail(message.clipId).then(sendResponse)
+        return true
+      } else if (message.type === 'search-clips') {
+        handleSearchClips(message.query).then(sendResponse)
+        return true
+      }
+    }
+  )
+
+  // Context menu handler
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'cliproot-generate-bibliography' && tab?.url) {
+      handleGenerateBibliography(tab.url, 'markdown').then((result) => {
+        if (result.sourceCount === 0) return
+        if (tab.id === undefined) return
+        // Copy to clipboard via content script injection
+        const code = `navigator.clipboard.writeText(${JSON.stringify(result.text)})`
+        if (chrome.scripting?.executeScript) {
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (text: string) => { navigator.clipboard.writeText(text) },
+            args: [result.text],
+          })
+        } else {
+          // Firefox MV2 fallback
+          browser.tabs.executeScript(tab.id, { code })
+        }
+      })
     }
   })
+
+  async function handleGetPageSources(url: string) {
+    const pastes = await findPastesByUrl(url)
+    const sourceMap = new Map<number, { clip: Awaited<ReturnType<typeof getClipById>>; pastes: typeof pastes }>()
+
+    for (const paste of pastes) {
+      if (paste.sourceClipId === null) continue
+      if (!sourceMap.has(paste.sourceClipId)) {
+        const clip = await getClipById(paste.sourceClipId)
+        sourceMap.set(paste.sourceClipId, { clip, pastes: [] })
+      }
+      sourceMap.get(paste.sourceClipId)!.pastes.push(paste)
+    }
+
+    const sources: PageSource[] = []
+    for (const [, { clip, pastes: clipPastes }] of sourceMap) {
+      if (!clip) continue
+      sources.push({
+        hostname: clip.hostname,
+        url: clip.url,
+        title: clip.title,
+        clipCount: clipPastes.length,
+        clips: clipPastes.map((p) => ({
+          id: clip.id!,
+          textPreview: p.textPreview,
+          timestamp: p.timestamp,
+        })),
+      })
+    }
+
+    return { sources }
+  }
+
+  async function handleGenerateBibliography(url: string, format: 'markdown' | 'numbered' | 'plain') {
+    const { sources } = await handleGetPageSources(url)
+
+    if (sources.length === 0) {
+      return { text: '', sourceCount: 0 }
+    }
+
+    // Deduplicate by source URL
+    const seen = new Set<string>()
+    const unique = sources.filter((s) => {
+      if (seen.has(s.url)) return false
+      seen.add(s.url)
+      return true
+    })
+
+    let text: string
+    if (format === 'markdown') {
+      text = unique.map((s) => `- [${s.title || s.hostname}](${s.url})`).join('\n')
+    } else if (format === 'numbered') {
+      text = unique.map((s, i) => `${i + 1}. ${s.title || s.hostname} — ${s.url}`).join('\n')
+    } else {
+      text = unique.map((s) => `${s.title || s.hostname}: ${s.url}`).join('\n')
+    }
+
+    return { text, sourceCount: unique.length }
+  }
+
+  async function handleGetClipDetail(clipId: number) {
+    const clip = (await getClipById(clipId)) ?? null
+    const pastes = clip ? await findPastesBySourceClipId(clipId) : []
+    return { clip, pastes }
+  }
+
+  async function handleSearchClips(query: string) {
+    const clips = await searchClips(query)
+    return { clips }
+  }
 
   function handleClipCaptured(message: ClipCapturedMessage, sender: chrome.runtime.MessageSender) {
     const tabId = sender.tab?.id
