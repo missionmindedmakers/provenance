@@ -1,7 +1,7 @@
-import type { StoredClip, PasteRecord } from './types'
+import type { StoredClip, StoredDocument, StoredDerivationEdge, StoredActivity } from './types'
 
 const DB_NAME = 'cliproot'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbInstance: IDBDatabase | null = null
 
@@ -13,23 +13,29 @@ function openDb(): Promise<IDBDatabase> {
       const db = request.result
       const oldVersion = event.oldVersion
 
-      if (oldVersion < 1) {
-        const clips = db.createObjectStore('clips', { keyPath: 'id', autoIncrement: true })
-        clips.createIndex('textHash', 'textHash', { unique: false })
-        clips.createIndex('timestamp', 'timestamp', { unique: false })
-
-        const pastes = db.createObjectStore('pastes', { keyPath: 'id', autoIncrement: true })
-        pastes.createIndex('textHash', 'textHash', { unique: false })
-        pastes.createIndex('timestamp', 'timestamp', { unique: false })
-        pastes.createIndex('sourceClipId', 'sourceClipId', { unique: false })
-      }
-
-      if (oldVersion < 2) {
-        const tx = (event.target as IDBOpenDBRequest).transaction!
-        const pastesStore = tx.objectStore('pastes')
-        if (!pastesStore.indexNames.contains('url')) {
-          pastesStore.createIndex('url', 'url', { unique: false })
+      if (oldVersion < 3) {
+        // Delete old stores from v1/v2 if they exist
+        if (db.objectStoreNames.contains('clips')) {
+          db.deleteObjectStore('clips')
         }
+        if (db.objectStoreNames.contains('pastes')) {
+          db.deleteObjectStore('pastes')
+        }
+
+        // Create new CRP-aligned stores
+        const documents = db.createObjectStore('documents', { keyPath: 'id' })
+        documents.createIndex('uri', 'uri', { unique: false })
+
+        const clips = db.createObjectStore('clips', { keyPath: 'clipHash' })
+        clips.createIndex('textHash', 'textHash', { unique: false })
+        clips.createIndex('documentId', 'documentId', { unique: false })
+
+        const edges = db.createObjectStore('derivationEdges', { keyPath: 'id' })
+        edges.createIndex('parentClipHash', 'parentClipHash', { unique: false })
+        edges.createIndex('childClipHash', 'childClipHash', { unique: false })
+
+        const activities = db.createObjectStore('activities', { keyPath: 'id' })
+        activities.createIndex('createdAt', 'createdAt', { unique: false })
       }
     }
 
@@ -49,24 +55,46 @@ export async function getDb(): Promise<IDBDatabase> {
   return db
 }
 
-export async function storeClip(clip: Omit<StoredClip, 'id'>): Promise<number> {
+export async function storeDocument(doc: StoredDocument): Promise<void> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('clips', 'readwrite')
-    const store = tx.objectStore('clips')
-    const request = store.add(clip)
-    request.onsuccess = () => resolve(request.result as number)
+    const tx = db.transaction('documents', 'readwrite')
+    const store = tx.objectStore('documents')
+    const request = store.put(doc)
+    request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error)
   })
 }
 
-export async function storePaste(paste: Omit<PasteRecord, 'id'>): Promise<number> {
+export async function storeClip(clip: StoredClip): Promise<void> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('pastes', 'readwrite')
-    const store = tx.objectStore('pastes')
-    const request = store.add(paste)
-    request.onsuccess = () => resolve(request.result as number)
+    const tx = db.transaction('clips', 'readwrite')
+    const store = tx.objectStore('clips')
+    const request = store.put(clip)
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function storeDerivationEdge(edge: StoredDerivationEdge): Promise<void> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('derivationEdges', 'readwrite')
+    const store = tx.objectStore('derivationEdges')
+    const request = store.put(edge)
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function storeActivity(activity: StoredActivity): Promise<void> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('activities', 'readwrite')
+    const store = tx.objectStore('activities')
+    const request = store.put(activity)
+    request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error)
   })
 }
@@ -83,25 +111,37 @@ export async function findClipsByTextHash(textHash: string): Promise<StoredClip[
   })
 }
 
-export async function findPastesByUrl(url: string): Promise<PasteRecord[]> {
-  const db = await getDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('pastes', 'readonly')
-    const store = tx.objectStore('pastes')
-    const index = store.index('url')
-    const request = index.getAll(url)
-    request.onsuccess = () => resolve(request.result as PasteRecord[])
-    request.onerror = () => reject(request.error)
-  })
-}
-
-export async function getClipById(id: number): Promise<StoredClip | undefined> {
+export async function getClipByHash(clipHash: string): Promise<StoredClip | undefined> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
     const tx = db.transaction('clips', 'readonly')
     const store = tx.objectStore('clips')
-    const request = store.get(id)
+    const request = store.get(clipHash)
     request.onsuccess = () => resolve(request.result as StoredClip | undefined)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function findEdgesByParentClipHash(parentClipHash: string): Promise<StoredDerivationEdge[]> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('derivationEdges', 'readonly')
+    const store = tx.objectStore('derivationEdges')
+    const index = store.index('parentClipHash')
+    const request = index.getAll(parentClipHash)
+    request.onsuccess = () => resolve(request.result as StoredDerivationEdge[])
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function findEdgesByChildClipHash(childClipHash: string): Promise<StoredDerivationEdge[]> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('derivationEdges', 'readonly')
+    const store = tx.objectStore('derivationEdges')
+    const index = store.index('childClipHash')
+    const request = index.getAll(childClipHash)
+    request.onsuccess = () => resolve(request.result as StoredDerivationEdge[])
     request.onerror = () => reject(request.error)
   })
 }
@@ -122,10 +162,7 @@ export async function searchClips(query: string): Promise<StoredClip[]> {
         return
       }
       const clip = cursor.value as StoredClip
-      if (
-        clip.textPreview.toLowerCase().includes(lowerQuery) ||
-        clip.fullText.toLowerCase().includes(lowerQuery)
-      ) {
+      if (clip.content.toLowerCase().includes(lowerQuery)) {
         results.push(clip)
       }
       cursor.continue()
@@ -134,14 +171,37 @@ export async function searchClips(query: string): Promise<StoredClip[]> {
   })
 }
 
-export async function findPastesBySourceClipId(sourceClipId: number): Promise<PasteRecord[]> {
+export async function getDocumentById(id: string): Promise<StoredDocument | undefined> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('pastes', 'readonly')
-    const store = tx.objectStore('pastes')
-    const index = store.index('sourceClipId')
-    const request = index.getAll(sourceClipId)
-    request.onsuccess = () => resolve(request.result as PasteRecord[])
+    const tx = db.transaction('documents', 'readonly')
+    const store = tx.objectStore('documents')
+    const request = store.get(id)
+    request.onsuccess = () => resolve(request.result as StoredDocument | undefined)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function findDocumentsByUri(uri: string): Promise<StoredDocument[]> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('documents', 'readonly')
+    const store = tx.objectStore('documents')
+    const index = store.index('uri')
+    const request = index.getAll(uri)
+    request.onsuccess = () => resolve(request.result as StoredDocument[])
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function findClipsByDocumentId(documentId: string): Promise<StoredClip[]> {
+  const db = await getDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('clips', 'readonly')
+    const store = tx.objectStore('clips')
+    const index = store.index('documentId')
+    const request = index.getAll(documentId)
+    request.onsuccess = () => resolve(request.result as StoredClip[])
     request.onerror = () => reject(request.error)
   })
 }

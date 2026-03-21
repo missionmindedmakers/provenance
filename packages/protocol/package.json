@@ -28,8 +28,8 @@
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js"
     },
-    "./schema": "./schema/crp-v0.0.1.schema.json",
-    "./schema/examples/crp-v0.0.1.document.example.json": "./schema/examples/crp-v0.0.1.document.example.json",
+    "./schema": "./schema/crp-v0.0.2.schema.json",
+    "./schema/examples/crp-v0.0.2.document.example.json": "./schema/examples/crp-v0.0.2.document.example.json",
     "./package.json": "./package.json"
   },
   "files": [

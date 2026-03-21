@@ -6,14 +6,15 @@ import {
   BUNDLE_TYPES,
   CrpValidationError,
   SOURCE_TYPES,
+  TRANSFORMATION_TYPES,
   parseBundle,
-  CRP_V0_0_1_SCHEMA,
+  CRP_V0_0_2_SCHEMA,
   validateBundle
 } from '../src/index.js'
 import type { CrpBundle } from '../src/types.js'
 
 function readFixture(): CrpBundle {
-  const fixtureUrl = new URL('../schema/examples/crp-v0.0.1.document.example.json', import.meta.url)
+  const fixtureUrl = new URL('../schema/examples/crp-v0.0.2.document.example.json', import.meta.url)
   return JSON.parse(readFileSync(fixtureUrl, 'utf8')) as CrpBundle
 }
 
@@ -25,7 +26,7 @@ describe('validateBundle', () => {
 
   it('accepts a minimal valid bundle', () => {
     const result = validateBundle({
-      protocolVersion: '0.0.1',
+      protocolVersion: '0.0.2',
       bundleType: 'document',
       createdAt: '2026-03-07T20:30:00Z'
     })
@@ -148,7 +149,26 @@ describe('validateBundle', () => {
     expect(result.errors.some((issue) => issue.instancePath.endsWith('/activityType'))).toBe(true)
   })
 
-  it('rejects clips missing textQuote selector and empty sourceRefs', () => {
+  it('accepts a clip without selectors (selectors are optional)', () => {
+    const bundle = readFixture()
+    const firstClip = bundle.clips?.[0]
+    if (!firstClip) {
+      throw new Error('Fixture missing first clip.')
+    }
+
+    const { selectors: _removed, ...clipWithoutSelectors } = firstClip as typeof firstClip & {
+      selectors: unknown
+    }
+
+    const result = validateBundle({
+      ...bundle,
+      clips: [clipWithoutSelectors]
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('rejects selectors with no properties (minProperties: 1)', () => {
     const bundle = readFixture()
     const firstClip = bundle.clips?.[0]
     if (!firstClip) {
@@ -160,10 +180,7 @@ describe('validateBundle', () => {
       clips: [
         {
           ...firstClip,
-          sourceRefs: [],
-          selectors: {
-            textPosition: firstClip.selectors.textPosition
-          }
+          selectors: {}
         }
       ]
     })
@@ -173,10 +190,51 @@ describe('validateBundle', () => {
       return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/sourceRefs'))).toBe(true)
-    expect(result.errors.some((issue) => issue.instancePath.endsWith('/selectors/textQuote'))).toBe(
-      true
-    )
+    expect(result.errors.some((issue) => issue.keyword === 'minProperties')).toBe(true)
+  })
+
+  it('accepts selectors with only textPosition (no textQuote)', () => {
+    const bundle = readFixture()
+    const firstClip = bundle.clips?.[0]
+    if (!firstClip) {
+      throw new Error('Fixture missing first clip.')
+    }
+
+    const result = validateBundle({
+      ...bundle,
+      clips: [
+        {
+          ...firstClip,
+          selectors: {
+            textPosition: { start: 0, end: 10 }
+          }
+        }
+      ]
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('accepts selectors with parentClipHash', () => {
+    const bundle = readFixture()
+    const firstClip = bundle.clips?.[0]
+    if (!firstClip) {
+      throw new Error('Fixture missing first clip.')
+    }
+
+    const result = validateBundle({
+      ...bundle,
+      clips: [
+        {
+          ...firstClip,
+          selectors: {
+            parentClipHash: 'sha256-ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'
+          }
+        }
+      ]
+    })
+
+    expect(result.ok).toBe(true)
   })
 
   // --- Hybrid model: clipHash (decentralized identity) ---
@@ -269,39 +327,25 @@ describe('validateBundle', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('accepts a clip with derivedFrom lineage chain', () => {
+  // --- derivationEdges ---
+
+  it('accepts valid derivationEdges', () => {
     const bundle = readFixture()
-    const firstClip = bundle.clips?.[0]
-    if (!firstClip) {
-      throw new Error('Fixture missing first clip.')
-    }
+    expect(bundle.derivationEdges).toBeDefined()
+    expect(bundle.derivationEdges!.length).toBeGreaterThan(0)
 
-    const result = validateBundle({
-      ...bundle,
-      clips: [
-        {
-          ...firstClip,
-          derivedFrom: [{ clipHash: 'sha256-ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' }]
-        }
-      ]
-    })
-
+    const result = validateBundle(bundle)
     expect(result.ok).toBe(true)
   })
 
-  it('rejects a derivedFrom entry with malformed clipHash', () => {
+  it('rejects derivationEdge missing required fields', () => {
     const bundle = readFixture()
-    const firstClip = bundle.clips?.[0]
-    if (!firstClip) {
-      throw new Error('Fixture missing first clip.')
-    }
-
     const result = validateBundle({
       ...bundle,
-      clips: [
+      derivationEdges: [
         {
-          ...firstClip,
-          derivedFrom: [{ clipHash: 'bad-hash' }]
+          id: 'edge_bad'
+          // missing childClipHash, parentClipHash, transformationType, createdAt
         }
       ]
     })
@@ -311,7 +355,89 @@ describe('validateBundle', () => {
       return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.includes('derivedFrom'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('childClipHash'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('parentClipHash'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('createdAt'))).toBe(true)
+  })
+
+  it('rejects derivationEdge with invalid transformationType', () => {
+    const bundle = readFixture()
+    const result = validateBundle({
+      ...bundle,
+      derivationEdges: [
+        {
+          id: 'edge_bad',
+          childClipHash: 'sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          parentClipHash: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+          transformationType: 'invalid-type',
+          createdAt: '2026-03-07T20:05:00Z'
+        }
+      ]
+    })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) {
+      return
+    }
+
+    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(true)
+  })
+
+  // --- new bundleType values ---
+
+  it('accepts derivation bundleType', () => {
+    const result = validateBundle({
+      protocolVersion: '0.0.2',
+      bundleType: 'derivation',
+      createdAt: '2026-03-07T20:30:00Z'
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('accepts provenance-export bundleType', () => {
+    const result = validateBundle({
+      protocolVersion: '0.0.2',
+      bundleType: 'provenance-export',
+      createdAt: '2026-03-07T20:30:00Z'
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  // --- new activityType values ---
+
+  it('accepts copy activityType', () => {
+    const bundle = readFixture()
+    const result = validateBundle({
+      ...bundle,
+      activities: [
+        {
+          id: 'act_copy',
+          activityType: 'copy',
+          createdAt: '2026-03-07T20:01:00Z'
+        }
+      ]
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('accepts derive activityType', () => {
+    const bundle = readFixture()
+    const result = validateBundle({
+      ...bundle,
+      activities: [
+        {
+          id: 'act_derive',
+          activityType: 'derive',
+          createdAt: '2026-03-07T20:01:00Z'
+        }
+      ]
+    })
+
+    expect(result.ok).toBe(true)
   })
 
   // --- Hybrid model: optional registry ---
@@ -384,7 +510,7 @@ describe('parseBundle', () => {
 
   it('throws CrpValidationError with issue details for invalid input', () => {
     const invalid = {
-      protocolVersion: '0.0.1',
+      protocolVersion: '0.0.2',
       bundleType: 'invalid',
       createdAt: 'bad-date'
     }
@@ -408,9 +534,10 @@ describe('parseBundle', () => {
 
 describe('schema enum constants', () => {
   it('matches schema enum definitions', () => {
-    expect(BUNDLE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.properties.bundleType.enum)
-    expect(SOURCE_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.sourceRecord.properties.sourceType.enum)
-    expect(AGENT_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.agent.properties.agentType.enum)
-    expect(ACTIVITY_TYPES).toEqual(CRP_V0_0_1_SCHEMA.$defs.activity.properties.activityType.enum)
+    expect(BUNDLE_TYPES).toEqual(CRP_V0_0_2_SCHEMA.properties.bundleType.enum)
+    expect(SOURCE_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.sourceRecord.properties.sourceType.enum)
+    expect(AGENT_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.agent.properties.agentType.enum)
+    expect(ACTIVITY_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.activity.properties.activityType.enum)
+    expect(TRANSFORMATION_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.derivationEdge.properties.transformationType.enum)
   })
 })

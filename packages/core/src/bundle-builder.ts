@@ -31,20 +31,11 @@ export function buildClipboardBundle(params: {
   const sourceId = 'src-page'
   const textHash = createTextHash(captured.text)
 
-  const clipHashInput: {
-    textHash: `sha256-${string}`
-    textQuoteExact: string
-    sourceRefs: string[]
-    derivedFrom?: string[]
-  } = {
+  const clipHash = createClipHash({
     textHash,
     textQuoteExact: captured.textQuote.exact,
     sourceRefs: [sourceId],
-  }
-  if (derivedFromClipHashes && derivedFromClipHashes.length > 0) {
-    clipHashInput.derivedFrom = derivedFromClipHashes
-  }
-  const clipHash = createClipHash(clipHashInput)
+  })
 
   const now = new Date().toISOString()
 
@@ -69,8 +60,16 @@ export function buildClipboardBundle(params: {
     selectors,
   }
 
+  // Build derivationEdges at bundle level instead of clip-level derivedFrom
+  let derivationEdges: Record<string, unknown>[] | undefined
   if (derivedFromClipHashes && derivedFromClipHashes.length > 0) {
-    clip.derivedFrom = derivedFromClipHashes.map((h) => ({ clipHash: h }))
+    derivationEdges = derivedFromClipHashes.map((parentHash, i) => ({
+      id: `edge-${i}`,
+      childClipHash: clipHash,
+      parentClipHash: parentHash,
+      transformationType: 'verbatim',
+      createdAt: now,
+    }))
   }
 
   // Build document
@@ -83,7 +82,7 @@ export function buildClipboardBundle(params: {
   }
 
   const bundle: CrpBundle = {
-    protocolVersion: CRP_PROTOCOL_VERSION as '0.0.1',
+    protocolVersion: CRP_PROTOCOL_VERSION as '0.0.2',
     bundleType: 'clipboard',
     createdAt: now,
     document,
@@ -94,6 +93,7 @@ export function buildClipboardBundle(params: {
       },
     ],
     clips: [clip],
+    ...(derivationEdges ? { derivationEdges } : {}),
   } as CrpBundle
 
   return bundle

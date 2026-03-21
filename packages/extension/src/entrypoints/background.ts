@@ -10,15 +10,32 @@ import type {
 } from '../types'
 import {
   storeClip,
-  storePaste,
+  storeDocument,
+  storeDerivationEdge,
+  storeActivity,
   findClipsByTextHash,
-  findPastesByUrl,
-  getClipById,
+  findClipsByDocumentId,
+  findDocumentsByUri,
+  findEdgesByChildClipHash,
+  findEdgesByParentClipHash,
+  getClipByHash,
+  getDocumentById,
   searchClips,
-  findPastesBySourceClipId,
 } from '../db'
 
 const tabClipCounts = new Map<number, number>()
+
+/** Deterministic per-URL document ID. */
+function documentIdFromUrl(url: string): string {
+  // Strip fragment so the same page always maps to one document
+  try {
+    const u = new URL(url)
+    u.hash = ''
+    return `doc-${u.href}`
+  } catch {
+    return `doc-${url}`
+  }
+}
 
 export default defineBackground(() => {
   // Initialize default state
@@ -70,7 +87,7 @@ export default defineBackground(() => {
         handleGenerateBibliography(message.url, message.format).then(sendResponse)
         return true
       } else if (message.type === 'get-clip-detail') {
-        handleGetClipDetail(message.clipId).then(sendResponse)
+        handleGetClipDetail(message.clipHash).then(sendResponse)
         return true
       } else if (message.type === 'search-clips') {
         handleSearchClips(message.query).then(sendResponse)
@@ -101,31 +118,60 @@ export default defineBackground(() => {
     }
   })
 
+  /**
+   * Find the provenance sources for content pasted on a given page URL.
+   *
+   * Query path (all indexed):
+   *   documents(uri=url) → clips(documentId) → derivationEdges(childClipHash)
+   *     → parent clips → parent documents (for URL/title)
+   */
   async function handleGetPageSources(url: string) {
-    const pastes = await findPastesByUrl(url)
-    const sourceMap = new Map<number, { clip: Awaited<ReturnType<typeof getClipById>>; pastes: typeof pastes }>()
+    // 1. Find documents matching this URL
+    const docs = await findDocumentsByUri(url)
+    if (docs.length === 0) return { sources: [] }
 
-    for (const paste of pastes) {
-      if (paste.sourceClipId === null) continue
-      if (!sourceMap.has(paste.sourceClipId)) {
-        const clip = await getClipById(paste.sourceClipId)
-        sourceMap.set(paste.sourceClipId, { clip, pastes: [] })
+    // 2. Find clips on those documents (the pasted-here clips)
+    const childClips = (
+      await Promise.all(docs.map((d) => findClipsByDocumentId(d.id)))
+    ).flat()
+
+    // 3. For each child clip, find derivation edges pointing to it
+    const edgesByParent = new Map<string, { parentClipHash: string; count: number; timestamps: number[] }>()
+
+    for (const child of childClips) {
+      const edges = await findEdgesByChildClipHash(child.clipHash)
+      for (const edge of edges) {
+        const existing = edgesByParent.get(edge.parentClipHash)
+        if (existing) {
+          existing.count++
+          existing.timestamps.push(new Date(edge.createdAt).getTime())
+        } else {
+          edgesByParent.set(edge.parentClipHash, {
+            parentClipHash: edge.parentClipHash,
+            count: 1,
+            timestamps: [new Date(edge.createdAt).getTime()],
+          })
+        }
       }
-      sourceMap.get(paste.sourceClipId)!.pastes.push(paste)
     }
 
+    // 4. Resolve parent clips + their documents for URL/title
     const sources: PageSource[] = []
-    for (const [, { clip, pastes: clipPastes }] of sourceMap) {
-      if (!clip) continue
+    for (const [parentHash, info] of edgesByParent) {
+      const parentClip = await getClipByHash(parentHash)
+      if (!parentClip) continue
+
+      const parentDoc = await getDocumentById(parentClip.documentId)
+
       sources.push({
-        hostname: clip.hostname,
-        url: clip.url,
-        title: clip.title,
-        clipCount: clipPastes.length,
-        clips: clipPastes.map((p) => ({
-          id: clip.id!,
-          textPreview: p.textPreview,
-          timestamp: p.timestamp,
+        hostname: parentDoc ? hostnameFromUrl(parentDoc.uri) : '',
+        url: parentDoc?.uri ?? '',
+        title: parentDoc?.title ?? '',
+        clipCount: info.count,
+        clips: info.timestamps.map((ts) => ({
+          clipHash: parentClip.clipHash,
+          textPreview: parentClip.content.slice(0, 100),
+          timestamp: ts,
         })),
       })
     }
@@ -160,10 +206,10 @@ export default defineBackground(() => {
     return { text, sourceCount: unique.length }
   }
 
-  async function handleGetClipDetail(clipId: number) {
-    const clip = (await getClipById(clipId)) ?? null
-    const pastes = clip ? await findPastesBySourceClipId(clipId) : []
-    return { clip, pastes }
+  async function handleGetClipDetail(clipHash: string) {
+    const clip = (await getClipByHash(clipHash)) ?? null
+    const edges = clip ? await findEdgesByParentClipHash(clipHash) : []
+    return { clip, edges }
   }
 
   async function handleSearchClips(query: string) {
@@ -180,7 +226,7 @@ export default defineBackground(() => {
     tabClipCounts.set(tabId, count)
 
     // Persist to recentClips storage (FIFO, last 50)
-    const clip: RecentClip = {
+    const recentClip: RecentClip = {
       url: message.url,
       hostname: message.hostname,
       title: message.title,
@@ -190,23 +236,39 @@ export default defineBackground(() => {
 
     chrome.storage.local.get(['recentClips'], (result: Record<string, unknown>) => {
       const existing = (result.recentClips as RecentClip[]) ?? []
-      const updated = [clip, ...existing].slice(0, 50)
+      const updated = [recentClip, ...existing].slice(0, 50)
       chrome.storage.local.set({ recentClips: updated })
     })
 
-    // Store in IndexedDB
-    storeClip({
-      textHash: message.textHash,
-      url: message.url,
-      hostname: message.hostname,
+    const now = new Date().toISOString()
+    const documentId = documentIdFromUrl(message.url)
+
+    // Store document (per-URL identity)
+    storeDocument({
+      id: documentId,
+      uri: message.url,
       title: message.title,
-      timestamp: Date.now(),
-      textPreview: message.textPreview,
-      fullText: message.fullText,
+    }).catch(() => {})
+
+    // Store clip as CRP object
+    storeClip({
+      clipHash: message.textHash,
+      documentId,
+      sourceRefs: [],
+      textHash: message.textHash,
+      content: message.fullText,
+      createdAt: now,
       bundleJson: message.bundleJson,
     }).catch(() => {
       // Best-effort — IndexedDB may be unavailable
     })
+
+    // Store activity
+    storeActivity({
+      id: `act-copy-${Date.now()}`,
+      activityType: 'copy',
+      createdAt: now,
+    }).catch(() => {})
 
     // Update badge with count
     chrome.storage.local.get(['enabled', 'siteSettings'], (result: Record<string, unknown>) => {
@@ -219,34 +281,64 @@ export default defineBackground(() => {
   }
 
   function handlePasteDetected(message: PasteDetectedMessage) {
+    const now = new Date().toISOString()
+    const destDocumentId = documentIdFromUrl(message.url)
+
+    // Store a document + clip for the destination page so that
+    // handleGetPageSources can later trace edges back to sources
+    storeDocument({
+      id: destDocumentId,
+      uri: message.url,
+      title: message.title,
+    }).catch(() => {})
+
+    // The pasted content is a clip on the destination page
+    const destClipHash = `paste-${message.textHash}-${Date.now()}`
+    storeClip({
+      clipHash: destClipHash,
+      documentId: destDocumentId,
+      sourceRefs: [],
+      textHash: message.textHash,
+      content: message.textPreview,
+      createdAt: now,
+      bundleJson: message.bundleJson,
+    }).catch(() => {})
+
     findClipsByTextHash(message.textHash).then((matchedClips) => {
-      let matchMethod: 'bundle' | 'hash' | 'none'
-      let sourceClipId: number | null = null
+      // Filter out the destination clip we just stored
+      const sourceClips = matchedClips.filter((c) => c.clipHash !== destClipHash)
 
-      if (message.bundleJson) {
-        matchMethod = 'bundle'
-        // Still try to link to a stored clip if we have a hash match
-        if (matchedClips.length > 0) {
-          sourceClipId = matchedClips[0].id ?? null
-        }
-      } else if (matchedClips.length > 0) {
-        matchMethod = 'hash'
-        sourceClipId = matchedClips[0].id ?? null
-      } else {
-        matchMethod = 'none'
+      if (message.bundleJson && sourceClips.length > 0) {
+        // Bundle match — high confidence edge
+        const parentClip = sourceClips[0]
+        storeDerivationEdge({
+          id: `edge-${Date.now()}`,
+          childClipHash: destClipHash,
+          parentClipHash: parentClip.clipHash,
+          transformationType: 'verbatim',
+          confidence: 1.0,
+          createdAt: now,
+        }).catch(() => {})
+      } else if (sourceClips.length > 0) {
+        // Hash match — verbatim with high confidence
+        const parentClip = sourceClips[0]
+        storeDerivationEdge({
+          id: `edge-${Date.now()}`,
+          childClipHash: destClipHash,
+          parentClipHash: parentClip.clipHash,
+          transformationType: 'verbatim',
+          confidence: 0.9,
+          createdAt: now,
+        }).catch(() => {})
       }
+      // matchMethod 'none' — no edge created
 
-      return storePaste({
-        textHash: message.textHash,
-        sourceClipId,
-        url: message.url,
-        hostname: message.hostname,
-        title: message.title,
-        timestamp: Date.now(),
-        textPreview: message.textPreview,
-        bundleJson: message.bundleJson,
-        matchMethod,
-      })
+      // Store derive activity
+      storeActivity({
+        id: `act-derive-${Date.now()}`,
+        activityType: 'derive',
+        createdAt: now,
+      }).catch(() => {})
     }).catch(() => {
       // Best-effort — IndexedDB may be unavailable
     })

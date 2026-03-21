@@ -16,42 +16,10 @@ describe('createClipHash', () => {
     expect(a).toBe(b)
   })
 
-  it('omits derivedFrom when absent', () => {
-    const withoutDerived = createClipHash({ textHash, textQuoteExact: 'Hello, world!', sourceRefs })
-    const withEmptyDerived = createClipHash({
-      textHash,
-      textQuoteExact: 'Hello, world!',
-      sourceRefs,
-      derivedFrom: [],
-    })
-    expect(withoutDerived).toBe(withEmptyDerived)
-  })
-
-  it('includes derivedFrom when present', () => {
-    const without = createClipHash({ textHash, textQuoteExact: 'Hello, world!', sourceRefs })
-    const withDerived = createClipHash({
-      textHash,
-      textQuoteExact: 'Hello, world!',
-      sourceRefs,
-      derivedFrom: ['sha256-abc'],
-    })
-    expect(without).not.toBe(withDerived)
-  })
-
-  it('is insensitive to derivedFrom ordering', () => {
-    const a = createClipHash({
-      textHash,
-      textQuoteExact: 'Hello, world!',
-      sourceRefs,
-      derivedFrom: ['sha256-bbb', 'sha256-aaa'],
-    })
-    const b = createClipHash({
-      textHash,
-      textQuoteExact: 'Hello, world!',
-      sourceRefs,
-      derivedFrom: ['sha256-aaa', 'sha256-bbb'],
-    })
-    expect(a).toBe(b)
+  it('hash without textQuoteExact differs from hash with it', () => {
+    const withoutQuote = createClipHash({ textHash, sourceRefs })
+    const withQuote = createClipHash({ textHash, textQuoteExact: 'Hello, world!', sourceRefs })
+    expect(withoutQuote).not.toBe(withQuote)
   })
 
   it('produces sha256- prefixed base64url output', () => {
@@ -77,5 +45,10 @@ describe('createClipHash', () => {
       sourceRefs: ['source-a'],
     })
     expect(hash).toBe(hash2)
+  })
+
+  it('works without textQuoteExact', () => {
+    const hash = createClipHash({ textHash, sourceRefs })
+    expect(hash).toMatch(/^sha256-[A-Za-z0-9_-]{43,}$/)
   })
 })

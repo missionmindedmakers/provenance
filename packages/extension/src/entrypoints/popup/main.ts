@@ -6,7 +6,7 @@ import type {
   GetClipDetailResponse,
   SearchClipsResponse,
   StoredClip,
-  PasteRecord,
+  StoredDerivationEdge,
 } from '../../types'
 
 const statusEl = document.getElementById('status')!
@@ -138,7 +138,7 @@ function renderSources(sources: PageSource[]) {
     li.append(hostname, count)
     li.addEventListener('click', () => {
       if (source.clips.length > 0) {
-        showClipDetail(source.clips[0].id)
+        showClipDetail(source.clips[0].clipHash)
       }
     })
     sourcesList.appendChild(li)
@@ -161,17 +161,17 @@ function generateBibliography() {
   )
 }
 
-function showClipDetail(clipId: number) {
+function showClipDetail(clipHash: string) {
   chrome.runtime.sendMessage(
-    { type: 'get-clip-detail', clipId },
+    { type: 'get-clip-detail', clipHash },
     (response: GetClipDetailResponse) => {
       if (!response || !response.clip) return
-      renderClipDetail(response.clip as StoredClip, response.pastes as PasteRecord[])
+      renderClipDetail(response.clip as StoredClip, response.edges as StoredDerivationEdge[])
     }
   )
 }
 
-function renderClipDetail(clip: StoredClip, pastes: PasteRecord[]) {
+function renderClipDetail(clip: StoredClip, edges: StoredDerivationEdge[]) {
   // Hide main sections, show detail
   recentClipsSection.style.display = 'none'
   pageSourcesSection.style.display = 'none'
@@ -181,36 +181,36 @@ function renderClipDetail(clip: StoredClip, pastes: PasteRecord[]) {
   detailContent.innerHTML = ''
 
   // Source info
-  const sourceField = createDetailField('Source', `${clip.title || clip.hostname}\n${clip.url}`)
+  const sourceField = createDetailField('Source', `${clip.documentId}`)
   detailContent.appendChild(sourceField)
 
   // Full text
-  const textField = createDetailField('Text', clip.fullText || clip.textPreview)
+  const textField = createDetailField('Text', clip.content)
   detailContent.appendChild(textField)
 
   // Timestamp
-  const timeField = createDetailField('Copied', new Date(clip.timestamp).toLocaleString())
+  const timeField = createDetailField('Copied', new Date(clip.createdAt).toLocaleString())
   detailContent.appendChild(timeField)
 
-  // Paste locations
-  if (pastes.length > 0) {
-    const pasteField = document.createElement('div')
-    pasteField.className = 'detail-field'
+  // Derivation edges
+  if (edges.length > 0) {
+    const edgeField = document.createElement('div')
+    edgeField.className = 'detail-field'
 
     const label = document.createElement('div')
     label.className = 'detail-label'
-    label.textContent = `Pasted ${pastes.length} time${pastes.length !== 1 ? 's' : ''}`
-    pasteField.appendChild(label)
+    label.textContent = `${edges.length} derivation${edges.length !== 1 ? 's' : ''}`
+    edgeField.appendChild(label)
 
     const list = document.createElement('ul')
     list.className = 'detail-paste-list'
-    for (const paste of pastes) {
+    for (const edge of edges) {
       const li = document.createElement('li')
-      li.textContent = `${paste.title || paste.hostname} \u00b7 ${relativeTime(paste.timestamp)}`
+      li.textContent = `${edge.transformationType} \u00b7 ${relativeTime(new Date(edge.createdAt).getTime())}`
       list.appendChild(li)
     }
-    pasteField.appendChild(list)
-    detailContent.appendChild(pasteField)
+    edgeField.appendChild(list)
+    detailContent.appendChild(edgeField)
   }
 }
 
@@ -276,15 +276,15 @@ function renderSearchResults(clips: StoredClip[]) {
 
     const preview = document.createElement('span')
     preview.className = 'clip-preview'
-    preview.textContent = clip.textPreview || '(no text)'
+    preview.textContent = clip.content.slice(0, 100) || '(no text)'
 
     const meta = document.createElement('span')
     meta.className = 'clip-meta'
-    meta.textContent = `${clip.hostname} \u00b7 ${relativeTime(clip.timestamp)}`
+    meta.textContent = `${clip.documentId} \u00b7 ${relativeTime(new Date(clip.createdAt).getTime())}`
 
     li.append(preview, meta)
     li.addEventListener('click', () => {
-      if (clip.id !== undefined) showClipDetail(clip.id)
+      showClipDetail(clip.clipHash)
     })
     searchResults.appendChild(li)
   }

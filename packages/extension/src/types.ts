@@ -19,29 +19,43 @@ export interface PasteDetectedMessage {
   bundleJson: string | null
 }
 
-export interface StoredClip {
-  id?: number
-  textHash: string
-  url: string
-  hostname: string
+export interface StoredDocument {
+  id: string
+  uri: string
   title: string
-  timestamp: number
-  textPreview: string
-  fullText: string
+}
+
+export interface StoredClip {
+  clipHash: string
+  documentId: string
+  sourceRefs: string[]
+  textHash: string
+  content: string
+  selectors?: {
+    textQuote?: { exact: string; prefix?: string; suffix?: string }
+    textPosition?: { start: number; end: number }
+    dom?: Record<string, string>
+    parentClipHash?: string
+  }
+  createdAt: string
   bundleJson: string | null
 }
 
-export interface PasteRecord {
-  id?: number
-  textHash: string
-  sourceClipId: number | null
-  url: string
-  hostname: string
-  title: string
-  timestamp: number
-  textPreview: string
-  bundleJson: string | null
-  matchMethod: 'bundle' | 'hash' | 'none'
+export interface StoredDerivationEdge {
+  id: string
+  childClipHash: string
+  parentClipHash: string
+  transformationType: string
+  agentId?: string
+  confidence?: number
+  createdAt: string
+}
+
+export interface StoredActivity {
+  id: string
+  activityType: string
+  agentId?: string
+  createdAt: string
 }
 
 export interface RecentClip {
@@ -64,7 +78,7 @@ export interface PageSource {
   url: string
   title: string
   clipCount: number
-  clips: Array<{ id: number; textPreview: string; timestamp: number }>
+  clips: Array<{ clipHash: string; textPreview: string; timestamp: number }>
 }
 
 export interface GetPageSourcesResponse {
@@ -84,12 +98,12 @@ export interface GenerateBibliographyResponse {
 
 export interface GetClipDetailRequest {
   type: 'get-clip-detail'
-  clipId: number
+  clipHash: string
 }
 
 export interface GetClipDetailResponse {
   clip: StoredClip | null
-  pastes: PasteRecord[]
+  edges: StoredDerivationEdge[]
 }
 
 export interface SearchClipsRequest {

@@ -47,17 +47,15 @@ export function createTextHash(text: string): `sha256-${string}` {
 
 export function createClipHash(input: {
   textHash: `sha256-${string}`
-  textQuoteExact: string
+  textQuoteExact?: string
   sourceRefs: string[]
-  derivedFrom?: string[]
 }): `sha256-${string}` {
   const canonical: Record<string, unknown> = {
     textHash: input.textHash,
-    textQuoteExact: input.textQuoteExact,
     sourceRefs: [...input.sourceRefs].sort(),
   }
-  if (input.derivedFrom && input.derivedFrom.length > 0) {
-    canonical.derivedFrom = [...input.derivedFrom].sort()
+  if (input.textQuoteExact !== undefined) {
+    canonical.textQuoteExact = input.textQuoteExact
   }
   const jcsString = canonicalize(canonical)
   if (jcsString === undefined) throw new Error('JCS canonicalization failed')
