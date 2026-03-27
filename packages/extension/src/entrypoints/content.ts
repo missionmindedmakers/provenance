@@ -112,7 +112,7 @@ export default defineContentScript({
           url: window.location.href,
           title: document.title,
           textPreview: pendingCapture.captured.text?.substring(0, 80) ?? '',
-          textHash: pendingCapture.bundle.clips[0].textHash,
+          textHash: pendingCapture.bundle.clips?.[0]?.textHash ?? '',
           fullText: pendingCapture.captured.text ?? '',
           bundleJson: JSON.stringify(pendingCapture.bundle)
         } satisfies ClipCapturedMessage)
