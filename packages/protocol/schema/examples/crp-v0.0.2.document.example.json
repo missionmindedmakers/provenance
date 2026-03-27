@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "0.0.1",
+  "protocolVersion": "0.0.2",
   "bundleType": "document",
   "createdAt": "2026-03-07T20:30:00Z",
   "registry": {
@@ -67,12 +67,16 @@
       },
       "content": "Provenance starts here, and this clip derives from clip_01.",
       "textHash": "sha256-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
-      "derivedFrom": [
-        {
-          "clipHash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-        }
-      ],
       "createdByActivityId": "act_02"
+    }
+  ],
+  "derivationEdges": [
+    {
+      "id": "edge_01",
+      "childClipHash": "sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+      "parentClipHash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "transformationType": "edit",
+      "createdAt": "2026-03-07T20:05:00Z"
     }
   ],
   "activities": [

@@ -2,7 +2,7 @@ import type { ErrorObject } from 'ajv'
 import { Ajv2020 } from 'ajv/dist/2020.js'
 import * as addFormatsPlugin from 'ajv-formats'
 
-import { CRP_V0_0_1_SCHEMA } from './schema.js'
+import { CRP_V0_0_2_SCHEMA } from './schema.js'
 import type { CrpBundle } from './types.js'
 
 export interface ValidationIssue {
@@ -46,7 +46,7 @@ const ajv = new Ajv2020({
 const addFormats = addFormatsPlugin as unknown as { default: (instance: Ajv2020) => void }
 addFormats.default(ajv)
 
-const validateCompiled = ajv.compile(CRP_V0_0_1_SCHEMA)
+const validateCompiled = ajv.compile(CRP_V0_0_2_SCHEMA)
 
 function pointerJoin(basePath: string, key: string): string {
   const normalizedBase = basePath || ''

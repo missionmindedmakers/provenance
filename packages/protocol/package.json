@@ -12,8 +12,24 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema": "./schema/crp-v0.0.1.schema.json",
-    "./schema/examples/crp-v0.0.1.document.example.json": "./schema/examples/crp-v0.0.1.document.example.json",
+    "./hash": {
+      "types": "./dist/hash.d.ts",
+      "import": "./dist/hash.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./dist/constants.js"
+    },
+    "./schema-meta": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./schema": "./schema/crp-v0.0.2.schema.json",
+    "./schema/examples/crp-v0.0.2.document.example.json": "./schema/examples/crp-v0.0.2.document.example.json",
     "./package.json": "./package.json"
   },
   "files": [
@@ -36,7 +52,8 @@
   "dependencies": {
     "@noble/hashes": "1.8.0",
     "ajv": "8.17.1",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "canonicalize": "^2.0.0"
   },
   "devDependencies": {
     "typescript": "5.7.3",

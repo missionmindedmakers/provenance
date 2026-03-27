@@ -1,17 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cliproot.com/schema/crp-v0.0.1.schema.json",
-  "title": "ClipRoot Protocol (CRP) v0.0.1",
+  "$id": "https://cliproot.com/schema/crp-v0.0.2.schema.json",
+  "title": "ClipRoot Protocol (CRP) v0.0.2",
   "description": "Minimal protocol bundle schema for document, clipboard, and reuse-event exchanges. Clips are content-addressed (clipHash) enabling offline verification and decentralized lineage chains. Registries are optional accelerators for discovery, not dependencies.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "protocolVersion": {
-      "const": "0.0.1"
+      "const": "0.0.2"
     },
     "bundleType": {
       "type": "string",
-      "enum": ["document", "clipboard", "reuse-event"]
+      "enum": ["document", "clipboard", "reuse-event", "derivation", "provenance-export"]
     },
     "createdAt": {
       "$ref": "#/$defs/dateTime"
@@ -44,6 +44,13 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/activity"
+      },
+      "default": []
+    },
+    "derivationEdges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/derivationEdge"
       },
       "default": []
     },
@@ -250,10 +257,52 @@
       },
       "required": ["uri"]
     },
+    "derivationEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "An edge in the derivation graph linking a child clip to a parent clip. Replaces the former clip-level derivedFrom array with a top-level graph structure.",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "childClipHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "parentClipHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "transformationType": {
+          "type": "string",
+          "enum": [
+            "verbatim",
+            "quote",
+            "summary",
+            "paraphrase",
+            "translate",
+            "combine",
+            "edit",
+            "ai_generate",
+            "unknown"
+          ]
+        },
+        "agentId": {
+          "$ref": "#/$defs/id"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "createdAt": {
+          "$ref": "#/$defs/dateTime"
+        }
+      },
+      "required": ["id", "childClipHash", "parentClipHash", "transformationType", "createdAt"]
+    },
     "clip": {
       "type": "object",
       "additionalProperties": false,
-      "description": "A content-addressed unit of provenance. clipHash is the global identity derived from the clip's canonical content (textHash + selectors + sourceRefs + derivedFrom). id is an optional local alias for intra-bundle cross-referencing.",
+      "description": "A content-addressed unit of provenance. clipHash is the global identity derived from the clip's canonical content (textHash + sourceRefs). id is an optional local alias for intra-bundle cross-referencing.",
       "properties": {
         "clipHash": {
           "$ref": "#/$defs/sha256Base64Url",
@@ -292,9 +341,12 @@
             },
             "mediaTime": {
               "$ref": "#/$defs/mediaTimeSelector"
+            },
+            "parentClipHash": {
+              "$ref": "#/$defs/sha256Base64Url"
             }
           },
-          "required": ["textQuote"]
+          "minProperties": 1
         },
         "content": {
           "type": "string",
@@ -303,20 +355,11 @@
         "textHash": {
           "$ref": "#/$defs/sha256Base64Url"
         },
-        "derivedFrom": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/clipRef"
-          },
-          "minItems": 1,
-          "uniqueItems": true,
-          "description": "Lineage chain linking this clip to its parent or source clips by content-addressed hash. Enables Merkle-like provenance graphs verifiable without a registry."
-        },
         "createdByActivityId": {
           "$ref": "#/$defs/id"
         }
       },
-      "required": ["clipHash", "sourceRefs", "selectors", "textHash"]
+      "required": ["clipHash", "sourceRefs", "textHash"]
     },
     "activity": {
       "type": "object",
@@ -334,7 +377,9 @@
             "edit",
             "ai_generate",
             "reuse_detected",
-            "reuse_notified"
+            "reuse_notified",
+            "copy",
+            "derive"
           ]
         },
         "agentId": {

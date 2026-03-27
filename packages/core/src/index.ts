@@ -1,0 +1,7 @@
+export { parseBundleFromHtml } from './clipboard-reader.js'
+export { captureSelection } from './selection.js'
+export { buildClipboardBundle } from './bundle-builder.js'
+export { writeProvenanceToClipboard, writeCustomFormatToClipboard } from './clipboard-writer.js'
+export { buildDomSelector } from './dom-selector.js'
+export { escapeHtml, escapeAttr } from './html-utils.js'
+export type { CapturedSelection, DocumentInfo, ClipboardWriteOptions } from './types.js'

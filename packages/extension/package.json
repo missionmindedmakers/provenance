@@ -1,0 +1,26 @@
+{
+  "name": "@cliproot/extension",
+  "version": "0.0.1",
+  "private": true,
+  "description": "ClipRoot browser extension — captures clipboard provenance",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "TARGET_BROWSER=firefox wxt",
+    "build": "wxt build",
+    "build:firefox": "TARGET_BROWSER=firefox wxt build",
+    "build:all": "wxt build && TARGET_BROWSER=firefox wxt build",
+    "zip:chrome": "wxt zip",
+    "zip:firefox": "TARGET_BROWSER=firefox wxt zip",
+    "typecheck": "wxt prepare && tsc --noEmit"
+  },
+  "dependencies": {
+    "@cliproot/core": "workspace:*",
+    "@cliproot/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.304",
+    "typescript": "5.7.3",
+    "wxt": "^0.20.5"
+  }
+}

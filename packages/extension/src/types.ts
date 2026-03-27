@@ -1,0 +1,116 @@
+export interface ClipCapturedMessage {
+  type: 'clip-captured'
+  hostname: string
+  url: string
+  title: string
+  textPreview: string
+  textHash: string
+  fullText: string
+  bundleJson: string | null
+}
+
+export interface PasteDetectedMessage {
+  type: 'paste-detected'
+  hostname: string
+  url: string
+  title: string
+  textPreview: string
+  textHash: string
+  bundleJson: string | null
+}
+
+export interface StoredDocument {
+  id: string
+  uri: string
+  title: string
+}
+
+export interface StoredClip {
+  clipHash: string
+  documentId: string
+  sourceRefs: string[]
+  textHash: string
+  content: string
+  selectors?: {
+    textQuote?: { exact: string; prefix?: string; suffix?: string }
+    textPosition?: { start: number; end: number }
+    dom?: Record<string, string>
+    parentClipHash?: string
+  }
+  createdAt: string
+  bundleJson: string | null
+}
+
+export interface StoredDerivationEdge {
+  id: string
+  childClipHash: string
+  parentClipHash: string
+  transformationType: string
+  agentId?: string
+  confidence?: number
+  createdAt: string
+}
+
+export interface StoredActivity {
+  id: string
+  activityType: string
+  agentId?: string
+  createdAt: string
+}
+
+export interface RecentClip {
+  url: string
+  hostname: string
+  title: string
+  timestamp: number
+  textPreview: string
+}
+
+export type SiteSettings = Record<string, boolean | 'default'>
+
+export interface GetPageSourcesRequest {
+  type: 'get-page-sources'
+  url: string
+}
+
+export interface PageSource {
+  hostname: string
+  url: string
+  title: string
+  clipCount: number
+  clips: Array<{ clipHash: string; textPreview: string; timestamp: number }>
+}
+
+export interface GetPageSourcesResponse {
+  sources: PageSource[]
+}
+
+export interface GenerateBibliographyRequest {
+  type: 'generate-bibliography'
+  url: string
+  format: 'markdown' | 'numbered' | 'plain'
+}
+
+export interface GenerateBibliographyResponse {
+  text: string
+  sourceCount: number
+}
+
+export interface GetClipDetailRequest {
+  type: 'get-clip-detail'
+  clipHash: string
+}
+
+export interface GetClipDetailResponse {
+  clip: StoredClip | null
+  edges: StoredDerivationEdge[]
+}
+
+export interface SearchClipsRequest {
+  type: 'search-clips'
+  query: string
+}
+
+export interface SearchClipsResponse {
+  clips: StoredClip[]
+}

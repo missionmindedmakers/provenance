@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipRoot</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>ClipRoot</h1>
+      <p id="status">Loading...</p>
+      <button id="toggle">Toggle</button>
+
+      <section id="site-controls">
+        <p id="site-hostname"></p>
+        <div id="site-toggle-group">
+          <button data-value="true">Enable here</button>
+          <button data-value="default">Use global</button>
+          <button data-value="false">Disable here</button>
+        </div>
+        <p id="effective-status"></p>
+      </section>
+
+      <section id="clip-search">
+        <input id="search-input" type="text" placeholder="Search clips..." />
+        <ul id="search-results"></ul>
+      </section>
+
+      <section id="recent-clips">
+        <h2>Recent Clips</h2>
+        <ul id="clips-list"></ul>
+      </section>
+
+      <section id="page-sources">
+        <h2>Sources on this page</h2>
+        <ul id="sources-list"></ul>
+        <button id="generate-bib" style="display:none">Copy Bibliography</button>
+      </section>
+
+      <section id="clip-detail" style="display:none">
+        <button id="detail-back">&larr; Back</button>
+        <h2>Clip Detail</h2>
+        <div id="detail-content"></div>
+      </section>
+
+      <a href="#" id="open-settings">Settings</a>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
