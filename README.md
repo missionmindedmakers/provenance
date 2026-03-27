@@ -9,11 +9,12 @@ The goal is to preserve attribution when people copy, paste, import, and revise 
 This repository is the public ClipRoot monorepo.
 
 It currently includes:
-- the CRP (`ClipRoot Protocol`) `v0.0.1` schema and research artifacts,
+- the CRP (`ClipRoot Protocol`) `v0.0.2` schema and research artifacts,
 - `@cliproot/protocol`, a TypeScript package for schema-backed validation, generated protocol types, and deterministic text hashing,
 - `@cliproot/core`, a browser-compatible SDK for capturing clipboard provenance on copy events,
 - `@cliproot/tiptap`, a Tiptap extension for managing span-level provenance and attribution,
 - `@cliproot/extension`, a WXT-based extension that intercepts copy events and writes CRP bundles,
+- `@cliproot/playground`, a web app for inspecting clips, viewing metadata, and visualizing provenance graphs,
 - monorepo tooling for building and testing public SDK packages.
 
 ## Protocol Overview
@@ -38,6 +39,8 @@ The generated schema constants and types are available in:
 
 ```text
 cliproot/
+  apps/
+    playground/    # @cliproot/playground — web playground for inspecting clips and provenance
   packages/
     protocol/      # @cliproot/protocol — schema validation, types, hashing
     core/          # @cliproot/core     — browser SDK for copy-side provenance capture
@@ -150,6 +153,30 @@ const editor = new Editor({
 // Set attribution on current selection
 editor.commands.setAttribution('prov_123')
 ```
+
+### Using the Playground
+
+The playground is a standalone web app for inspecting Cliproot provenance without installing anything. It supports three ways to load clip data:
+
+1. **Paste** — reads `application/x-cliproot+json` from the clipboard (requires the browser extension)
+2. **Open Folder** — select a directory containing `.cliproot/objects/` to load all bundles (Chromium browsers; Firefox/Safari fall back to folder upload)
+3. **Upload JSON** — drag-and-drop or select individual CRP bundle JSON files
+
+**Run locally:**
+
+```bash
+pnpm --filter @cliproot/playground dev
+```
+
+This starts a Vite dev server at `http://localhost:5173`. Click **Load demo data** to see an example with clips, derivation edges, and a provenance graph.
+
+**Build for deployment:**
+
+```bash
+pnpm --filter @cliproot/playground build
+```
+
+The output in `apps/playground/dist/` is a static site that can be deployed to any hosting provider (GitHub Pages, Cloudflare Pages, etc.).
 
 ## Prerequisites
 
