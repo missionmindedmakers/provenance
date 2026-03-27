@@ -35,9 +35,7 @@ function buildCssSelector(el: Element): string {
     const parentEl: Element | null = current.parentElement
     if (parentEl) {
       const tag = current.tagName
-      const siblings = Array.from(parentEl.children).filter(
-        (c: Element) => c.tagName === tag
-      )
+      const siblings = Array.from(parentEl.children).filter((c: Element) => c.tagName === tag)
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1
         selector += `:nth-of-type(${index})`

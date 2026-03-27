@@ -8,7 +8,8 @@ describe('captureSelection', () => {
   })
 
   it('captures text, textQuote, textPosition, and domSelector from a range', () => {
-    document.body.innerHTML = '<div id="test-container"><p>Hello world, this is a test of selection capture.</p></div>'
+    document.body.innerHTML =
+      '<div id="test-container"><p>Hello world, this is a test of selection capture.</p></div>'
     const textNode = document.querySelector('#test-container p')!.firstChild!
     const range = document.createRange()
     range.setStart(textNode, 6)

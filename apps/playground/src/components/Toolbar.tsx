@@ -5,13 +5,9 @@ import { useBundleStore } from '../hooks/useBundleStore'
 import {
   isClipboardReadSupported,
   readCliprootFromClipboard,
-  readCliprootFromPasteEvent,
+  readCliprootFromPasteEvent
 } from '../lib/clipboard-read'
-import {
-  isFsaSupported,
-  openCliprootDirectory,
-  readBundlesFromFileList,
-} from '../lib/fsa-reader'
+import { isFsaSupported, openCliprootDirectory, readBundlesFromFileList } from '../lib/fsa-reader'
 
 export function Toolbar() {
   const addBundle = useBundleStore((s) => s.addBundle)
@@ -60,9 +56,7 @@ export function Toolbar() {
     }
   }
 
-  const handleFolderFallback = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFolderFallback = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null)
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -93,9 +87,7 @@ export function Toolbar() {
           setError(`${file.name}: validation failed`)
         }
       } catch (err) {
-        setError(
-          `${file.name}: ${err instanceof Error ? err.message : String(err)}`,
-        )
+        setError(`${file.name}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
     e.target.value = ''

@@ -8,20 +8,20 @@ describe('buildClipboardBundle', () => {
     textQuote: {
       exact: 'Hello, world!',
       prefix: 'prefix text ',
-      suffix: ' suffix text',
+      suffix: ' suffix text'
     },
     textPosition: {
       start: 12,
-      end: 25,
+      end: 25
     },
     domSelector: {
-      elementId: 'main-content',
-    },
+      elementId: 'main-content'
+    }
   }
 
   const documentInfo: DocumentInfo = {
     uri: 'https://example.com/article',
-    title: 'Test Article',
+    title: 'Test Article'
   }
 
   it('produces a valid CRP bundle', () => {
@@ -52,7 +52,7 @@ describe('buildClipboardBundle', () => {
     expect(selectors.textQuote).toEqual({
       exact: 'Hello, world!',
       prefix: 'prefix text ',
-      suffix: ' suffix text',
+      suffix: ' suffix text'
     })
   })
 
@@ -60,7 +60,7 @@ describe('buildClipboardBundle', () => {
     const bundle = buildClipboardBundle({
       captured,
       documentInfo,
-      derivedFromClipHashes: ['sha256-abc123'],
+      derivedFromClipHashes: ['sha256-abc123']
     })
     const edges = bundle.derivationEdges as Record<string, unknown>[] | undefined
     expect(edges).toBeDefined()
@@ -80,11 +80,11 @@ describe('buildClipboardBundle', () => {
   it('produces valid bundle without optional fields', () => {
     const minimal: CapturedSelection = {
       text: 'test',
-      textQuote: { exact: 'test' },
+      textQuote: { exact: 'test' }
     }
     const bundle = buildClipboardBundle({
       captured: minimal,
-      documentInfo: { uri: 'https://example.com' },
+      documentInfo: { uri: 'https://example.com' }
     })
     const result = validateBundle(bundle)
     expect(result.ok).toBe(true)

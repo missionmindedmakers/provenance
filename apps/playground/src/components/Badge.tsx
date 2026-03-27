@@ -3,7 +3,7 @@ const SOURCE_COLORS: Record<string, string> = {
   'ai-generated': 'bg-purple-900/50 text-purple-300',
   'ai-assisted': 'bg-violet-900/50 text-violet-300',
   'external-quoted': 'bg-amber-900/50 text-amber-300',
-  unknown: 'bg-gray-800 text-gray-400',
+  unknown: 'bg-gray-800 text-gray-400'
 }
 
 const TRANSFORM_COLORS: Record<string, string> = {
@@ -15,15 +15,13 @@ const TRANSFORM_COLORS: Record<string, string> = {
   combine: 'bg-pink-900/50 text-pink-300',
   edit: 'bg-yellow-900/50 text-yellow-300',
   ai_generate: 'bg-purple-900/50 text-purple-300',
-  unknown: 'bg-gray-800 text-gray-400',
+  unknown: 'bg-gray-800 text-gray-400'
 }
 
 export function SourceBadge({ type }: { type: string }) {
   const colors = SOURCE_COLORS[type] ?? SOURCE_COLORS.unknown!
   return (
-    <span
-      className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${colors}`}
-    >
+    <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${colors}`}>
       {type}
     </span>
   )
@@ -32,9 +30,7 @@ export function SourceBadge({ type }: { type: string }) {
 export function TransformBadge({ type }: { type: string }) {
   const colors = TRANSFORM_COLORS[type] ?? TRANSFORM_COLORS.unknown!
   return (
-    <span
-      className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${colors}`}
-    >
+    <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${colors}`}>
       {type}
     </span>
   )

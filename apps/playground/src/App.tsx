@@ -30,9 +30,7 @@ export function App() {
       {/* Header */}
       <header className="shrink-0 border-b border-gray-800 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold tracking-tight">
-            Cliproot Playground
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight">Cliproot Playground</h1>
           <div className="flex items-center gap-2">
             {hasEdges && (
               <div className="flex rounded bg-gray-800 text-sm">
@@ -49,9 +47,7 @@ export function App() {
                 <button
                   onClick={() => setView('dag')}
                   className={`rounded-r px-3 py-1 transition-colors ${
-                    view === 'dag'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-400 hover:text-gray-200'
+                    view === 'dag' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   Graph
@@ -76,11 +72,7 @@ export function App() {
 
             {/* Main panel */}
             <main className="min-w-0 flex-1">
-              {view === 'dag' && hasEdges ? (
-                <ProvenanceDag />
-              ) : (
-                <ClipDetail />
-              )}
+              {view === 'dag' && hasEdges ? <ProvenanceDag /> : <ClipDetail />}
             </main>
           </>
         ) : (

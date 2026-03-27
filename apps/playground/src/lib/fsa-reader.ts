@@ -6,7 +6,7 @@ export function isFsaSupported(): boolean {
 }
 
 async function findObjectsDir(
-  root: FileSystemDirectoryHandle,
+  root: FileSystemDirectoryHandle
 ): Promise<FileSystemDirectoryHandle | null> {
   // Try: root/objects/
   try {
@@ -27,7 +27,7 @@ async function findObjectsDir(
 }
 
 async function readBundlesFromDir(
-  dir: FileSystemDirectoryHandle,
+  dir: FileSystemDirectoryHandle
 ): Promise<{ bundles: [string, CrpBundle][]; errors: string[] }> {
   const bundles: [string, CrpBundle][] = []
   const errors: string[] = []
@@ -45,9 +45,7 @@ async function readBundlesFromDir(
         errors.push(`${name}: validation failed`)
       }
     } catch (err) {
-      errors.push(
-        `${name}: ${err instanceof Error ? err.message : String(err)}`,
-      )
+      errors.push(`${name}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -64,9 +62,7 @@ export async function openCliprootDirectory(): Promise<{
   if (!objectsDir) {
     return {
       bundles: [],
-      errors: [
-        'No objects/ directory found. Select a .cliproot/ directory or its parent.',
-      ],
+      errors: ['No objects/ directory found. Select a .cliproot/ directory or its parent.']
     }
   }
 
@@ -78,19 +74,17 @@ export async function openCliprootDirectory(): Promise<{
  * Reads files from an <input type="file" webkitdirectory> FileList.
  */
 export async function readBundlesFromFileList(
-  files: FileList,
+  files: FileList
 ): Promise<{ bundles: [string, CrpBundle][]; errors: string[] }> {
   const bundles: [string, CrpBundle][] = []
   const errors: string[] = []
 
   for (const file of files) {
     // Match files inside an objects/ directory
-    const path = (file as File & { webkitRelativePath?: string })
-      .webkitRelativePath
+    const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath
     if (!path) continue
     const parts = path.split('/')
-    const inObjects =
-      parts.some((p) => p === 'objects') && file.name.endsWith('.json')
+    const inObjects = parts.some((p) => p === 'objects') && file.name.endsWith('.json')
     if (!inObjects) continue
 
     try {
@@ -103,9 +97,7 @@ export async function readBundlesFromFileList(
         errors.push(`${file.name}: validation failed`)
       }
     } catch (err) {
-      errors.push(
-        `${file.name}: ${err instanceof Error ? err.message : String(err)}`,
-      )
+      errors.push(`${file.name}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 

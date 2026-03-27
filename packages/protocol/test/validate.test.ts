@@ -357,7 +357,9 @@ describe('validateBundle', () => {
 
     expect(result.errors.some((issue) => issue.instancePath.includes('childClipHash'))).toBe(true)
     expect(result.errors.some((issue) => issue.instancePath.includes('parentClipHash'))).toBe(true)
-    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(
+      true
+    )
     expect(result.errors.some((issue) => issue.instancePath.includes('createdAt'))).toBe(true)
   })
 
@@ -381,7 +383,9 @@ describe('validateBundle', () => {
       return
     }
 
-    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(true)
+    expect(result.errors.some((issue) => issue.instancePath.includes('transformationType'))).toBe(
+      true
+    )
   })
 
   // --- new bundleType values ---
@@ -538,6 +542,8 @@ describe('schema enum constants', () => {
     expect(SOURCE_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.sourceRecord.properties.sourceType.enum)
     expect(AGENT_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.agent.properties.agentType.enum)
     expect(ACTIVITY_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.activity.properties.activityType.enum)
-    expect(TRANSFORMATION_TYPES).toEqual(CRP_V0_0_2_SCHEMA.$defs.derivationEdge.properties.transformationType.enum)
+    expect(TRANSFORMATION_TYPES).toEqual(
+      CRP_V0_0_2_SCHEMA.$defs.derivationEdge.properties.transformationType.enum
+    )
   })
 })

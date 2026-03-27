@@ -34,7 +34,7 @@ const NODE_HEIGHT = 60
 
 export function computeDagLayout(
   clips: Map<string, MergedClip>,
-  edges: MergedEdge[],
+  edges: MergedEdge[]
 ): DagLayout | null {
   if (edges.length === 0) return null
 
@@ -58,7 +58,7 @@ export function computeDagLayout(
   const data: DagNodeDatum[] = Array.from(relevantHashes).map((hash) => ({
     id: hash,
     parentIds: Array.from(parentMap.get(hash) ?? []),
-    clip: clips.get(hash) ?? null,
+    clip: clips.get(hash) ?? null
   }))
 
   try {
@@ -82,7 +82,7 @@ export function computeDagLayout(
         id: gn.data.id,
         x: gn.x,
         y: gn.y,
-        clip: gn.data.clip,
+        clip: gn.data.clip
       })
     }
 
@@ -99,7 +99,7 @@ export function computeDagLayout(
         sourceId,
         targetId,
         points: gl.points.map((p) => [p[0]!, p[1]!]),
-        edge: mergedEdge,
+        edge: mergedEdge
       })
     }
 

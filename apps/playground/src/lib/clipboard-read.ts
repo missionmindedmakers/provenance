@@ -4,10 +4,7 @@ import { validateBundle } from '@cliproot/protocol'
 const CLIPROOT_MIME = 'web application/x-cliproot+json'
 
 export function isClipboardReadSupported(): boolean {
-  return (
-    typeof navigator !== 'undefined' &&
-    typeof navigator.clipboard?.read === 'function'
-  )
+  return typeof navigator !== 'undefined' && typeof navigator.clipboard?.read === 'function'
 }
 
 export async function readCliprootFromClipboard(): Promise<{
@@ -35,7 +32,7 @@ export async function readCliprootFromClipboard(): Promise<{
         console.warn('[cliproot] Custom MIME validation failed:', result.errors)
         return {
           bundle: null,
-          error: `Validation failed: ${result.errors.map((e) => e.message).join(', ')}`,
+          error: `Validation failed: ${result.errors.map((e) => e.message).join(', ')}`
         }
       }
 
@@ -56,13 +53,14 @@ export async function readCliprootFromClipboard(): Promise<{
     console.log('[cliproot] No Cliproot data found in any clipboard item')
     return {
       bundle: null,
-      error: 'No Cliproot data found in clipboard. Copy text from a site with the Cliproot extension first.',
+      error:
+        'No Cliproot data found in clipboard. Copy text from a site with the Cliproot extension first.'
     }
   } catch (err) {
     console.error('[cliproot] Clipboard read error:', err)
     return {
       bundle: null,
-      error: `Clipboard read failed: ${err instanceof Error ? err.message : String(err)}`,
+      error: `Clipboard read failed: ${err instanceof Error ? err.message : String(err)}`
     }
   }
 }
@@ -97,7 +95,7 @@ export function readCliprootFromPasteEvent(e: ClipboardEvent): {
       }
       return {
         bundle: null,
-        error: `Validation failed: ${result.errors.map((e) => e.message).join(', ')}`,
+        error: `Validation failed: ${result.errors.map((e) => e.message).join(', ')}`
       }
     } catch {
       console.warn('[cliproot:paste] Failed to parse custom MIME JSON')
@@ -120,7 +118,7 @@ export function readCliprootFromPasteEvent(e: ClipboardEvent): {
   console.log('[cliproot:paste] No Cliproot data found in paste event')
   return {
     bundle: null,
-    error: 'No Cliproot data found. Copy text from a site with the Cliproot extension first.',
+    error: 'No Cliproot data found. Copy text from a site with the Cliproot extension first.'
   }
 }
 

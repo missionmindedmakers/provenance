@@ -52,7 +52,7 @@ export function createClipHash(input: {
 }): `sha256-${string}` {
   const canonical: Record<string, unknown> = {
     textHash: input.textHash,
-    sourceRefs: [...input.sourceRefs].sort(),
+    sourceRefs: [...input.sourceRefs].sort()
   }
   if (input.textQuoteExact !== undefined) {
     canonical.textQuoteExact = input.textQuoteExact

@@ -1,4 +1,10 @@
-import { captureSelection, buildClipboardBundle, writeProvenanceToClipboard, writeCustomFormatToClipboard, parseBundleFromHtml } from '@cliproot/core'
+import {
+  captureSelection,
+  buildClipboardBundle,
+  writeProvenanceToClipboard,
+  writeCustomFormatToClipboard,
+  parseBundleFromHtml
+} from '@cliproot/core'
 import type { CapturedSelection } from '@cliproot/core'
 import { createTextHash } from '@cliproot/protocol/hash'
 import type { CrpBundle } from '@cliproot/protocol/types'
@@ -26,16 +32,21 @@ export default defineContentScript({
       siteOverride = hostname in siteSettings ? siteSettings[hostname] : 'default'
     })
 
-    chrome.storage.onChanged.addListener((changes: Record<string, chrome.storage.StorageChange>) => {
-      if (changes.enabled) {
-        globalEnabled = changes.enabled.newValue !== false
+    chrome.storage.onChanged.addListener(
+      (changes: Record<string, chrome.storage.StorageChange>) => {
+        if (changes.enabled) {
+          globalEnabled = changes.enabled.newValue !== false
+        }
+        if (changes.siteSettings) {
+          const siteSettings = (changes.siteSettings.newValue ?? {}) as Record<
+            string,
+            boolean | 'default'
+          >
+          const hostname = location.hostname
+          siteOverride = hostname in siteSettings ? siteSettings[hostname] : 'default'
+        }
       }
-      if (changes.siteSettings) {
-        const siteSettings = (changes.siteSettings.newValue ?? {}) as Record<string, boolean | 'default'>
-        const hostname = location.hostname
-        siteOverride = hostname in siteSettings ? siteSettings[hostname] : 'default'
-      }
-    })
+    )
 
     // Phase 1: Capture-phase listener — snapshot selection, build bundle, do NOT preventDefault
     document.addEventListener(
@@ -53,7 +64,7 @@ export default defineContentScript({
         if (!captured) return
 
         const documentInfo: { uri: string; title?: string | undefined } = {
-          uri: window.location.href,
+          uri: window.location.href
         }
         if (document.title) {
           documentInfo.title = document.title
@@ -61,7 +72,7 @@ export default defineContentScript({
 
         const bundle = buildClipboardBundle({
           captured,
-          documentInfo,
+          documentInfo
         })
 
         pendingCapture = { captured, bundle }
@@ -102,7 +113,7 @@ export default defineContentScript({
           textPreview: pendingCapture.captured.text?.substring(0, 80) ?? '',
           textHash: pendingCapture.bundle.clips[0].textHash,
           fullText: pendingCapture.captured.text ?? '',
-          bundleJson: JSON.stringify(pendingCapture.bundle),
+          bundleJson: JSON.stringify(pendingCapture.bundle)
         } satisfies ClipCapturedMessage)
 
         pendingCapture = null
@@ -111,30 +122,34 @@ export default defineContentScript({
     )
 
     // Paste detection — capture phase, READ-ONLY (never preventDefault)
-    document.addEventListener('paste', (event: ClipboardEvent) => {
-      if (!isEnabled() || !event.clipboardData) return
-      const plainText = event.clipboardData.getData('text/plain')
-      if (!plainText) return
+    document.addEventListener(
+      'paste',
+      (event: ClipboardEvent) => {
+        if (!isEnabled() || !event.clipboardData) return
+        const plainText = event.clipboardData.getData('text/plain')
+        if (!plainText) return
 
-      const html = event.clipboardData.getData('text/html')
-      let bundleJson: string | null = null
-      if (html) {
-        const bundle = parseBundleFromHtml(html)
-        if (bundle) bundleJson = JSON.stringify(bundle)
-      }
+        const html = event.clipboardData.getData('text/html')
+        let bundleJson: string | null = null
+        if (html) {
+          const bundle = parseBundleFromHtml(html)
+          if (bundle) bundleJson = JSON.stringify(bundle)
+        }
 
-      const textHash = createTextHash(plainText)
+        const textHash = createTextHash(plainText)
 
-      chrome.runtime.sendMessage({
-        type: 'paste-detected',
-        hostname: location.hostname,
-        url: window.location.href,
-        title: document.title,
-        textPreview: plainText.substring(0, 80),
-        textHash,
-        bundleJson,
-      } satisfies PasteDetectedMessage)
-    }, { capture: true })
+        chrome.runtime.sendMessage({
+          type: 'paste-detected',
+          hostname: location.hostname,
+          url: window.location.href,
+          title: document.title,
+          textPreview: plainText.substring(0, 80),
+          textHash,
+          bundleJson
+        } satisfies PasteDetectedMessage)
+      },
+      { capture: true }
+    )
 
     // Phase 3: Fallback — if bubble listener never fired (site called stopImmediatePropagation),
     // use setTimeout + Async Clipboard API as best-effort fallback
@@ -172,7 +187,7 @@ export default defineContentScript({
 
             const clipboardItem: Record<string, Blob> = {
               'text/plain': textBlob,
-              'text/html': new Blob([finalHtml], { type: 'text/html' }),
+              'text/html': new Blob([finalHtml], { type: 'text/html' })
             }
 
             // Include custom MIME if supported
@@ -194,7 +209,7 @@ export default defineContentScript({
       },
       { capture: true }
     )
-  },
+  }
 })
 
 function escapeAttr(text: string): string {

@@ -7,7 +7,7 @@ import {
   type MergedState,
   type ResolvedAgent,
   type ResolvedActivity,
-  type ResolvedSource,
+  type ResolvedSource
 } from '../lib/bundle-merge'
 
 interface BundleStore {
@@ -42,7 +42,7 @@ function emptyMerged(): MergedState {
     edges: [],
     agents: new Map(),
     sources: new Map(),
-    activities: new Map(),
+    activities: new Map()
   }
 }
 
@@ -88,6 +88,6 @@ export const useBundleStore = create<BundleStore>((set) => ({
     set({
       bundles: new Map(),
       ...emptyMerged(),
-      selectedClipHash: null,
-    }),
+      selectedClipHash: null
+    })
 }))

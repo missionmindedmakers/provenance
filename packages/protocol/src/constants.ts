@@ -4,9 +4,17 @@ export type BundleType = CrpBundle['bundleType']
 export type SourceType = NonNullable<CrpBundle['sources']>[number]['sourceType']
 export type AgentType = NonNullable<CrpBundle['agents']>[number]['agentType']
 export type ActivityType = NonNullable<CrpBundle['activities']>[number]['activityType']
-export type TransformationType = NonNullable<CrpBundle['derivationEdges']>[number]['transformationType']
+export type TransformationType = NonNullable<
+  CrpBundle['derivationEdges']
+>[number]['transformationType']
 
-export const BUNDLE_TYPES: readonly BundleType[] = ['document', 'clipboard', 'reuse-event', 'derivation', 'provenance-export']
+export const BUNDLE_TYPES: readonly BundleType[] = [
+  'document',
+  'clipboard',
+  'reuse-event',
+  'derivation',
+  'provenance-export'
+]
 export const SOURCE_TYPES: readonly SourceType[] = [
   'human-authored',
   'ai-generated',

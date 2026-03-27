@@ -6,7 +6,7 @@ import type {
   GenerateBibliographyRequest,
   GetClipDetailRequest,
   SearchClipsRequest,
-  PageSource,
+  PageSource
 } from '../types'
 import {
   storeClip,
@@ -20,7 +20,7 @@ import {
   findEdgesByParentClipHash,
   getClipByHash,
   getDocumentById,
-  searchClips,
+  searchClips
 } from '../db'
 
 const tabClipCounts = new Map<number, number>()
@@ -46,21 +46,27 @@ export default defineBackground(() => {
     chrome.contextMenus.create({
       id: 'cliproot-generate-bibliography',
       title: 'Generate bibliography',
-      contexts: ['page'],
+      contexts: ['page']
     })
   })
 
   // Sync badge with storage state on startup
   chrome.storage.local.get(['enabled', 'siteSettings'], (result: Record<string, unknown>) => {
     const globalEnabled = result.enabled !== false
-    updateBadgeForCurrentTab(globalEnabled, result.siteSettings as Record<string, boolean | 'default'> | undefined)
+    updateBadgeForCurrentTab(
+      globalEnabled,
+      result.siteSettings as Record<string, boolean | 'default'> | undefined
+    )
   })
 
   chrome.storage.onChanged.addListener((changes: Record<string, chrome.storage.StorageChange>) => {
     if (changes.enabled || changes.siteSettings) {
       chrome.storage.local.get(['enabled', 'siteSettings'], (result: Record<string, unknown>) => {
         const globalEnabled = result.enabled !== false
-        updateBadgeForCurrentTab(globalEnabled, result.siteSettings as Record<string, boolean | 'default'> | undefined)
+        updateBadgeForCurrentTab(
+          globalEnabled,
+          result.siteSettings as Record<string, boolean | 'default'> | undefined
+        )
       })
     }
   })
@@ -107,8 +113,10 @@ export default defineBackground(() => {
         if (chrome.scripting?.executeScript) {
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            func: (text: string) => { navigator.clipboard.writeText(text) },
-            args: [result.text],
+            func: (text: string) => {
+              navigator.clipboard.writeText(text)
+            },
+            args: [result.text]
           })
         } else {
           // Firefox MV2 fallback
@@ -131,12 +139,13 @@ export default defineBackground(() => {
     if (docs.length === 0) return { sources: [] }
 
     // 2. Find clips on those documents (the pasted-here clips)
-    const childClips = (
-      await Promise.all(docs.map((d) => findClipsByDocumentId(d.id)))
-    ).flat()
+    const childClips = (await Promise.all(docs.map((d) => findClipsByDocumentId(d.id)))).flat()
 
     // 3. For each child clip, find derivation edges pointing to it
-    const edgesByParent = new Map<string, { parentClipHash: string; count: number; timestamps: number[] }>()
+    const edgesByParent = new Map<
+      string,
+      { parentClipHash: string; count: number; timestamps: number[] }
+    >()
 
     for (const child of childClips) {
       const edges = await findEdgesByChildClipHash(child.clipHash)
@@ -149,7 +158,7 @@ export default defineBackground(() => {
           edgesByParent.set(edge.parentClipHash, {
             parentClipHash: edge.parentClipHash,
             count: 1,
-            timestamps: [new Date(edge.createdAt).getTime()],
+            timestamps: [new Date(edge.createdAt).getTime()]
           })
         }
       }
@@ -171,15 +180,18 @@ export default defineBackground(() => {
         clips: info.timestamps.map((ts) => ({
           clipHash: parentClip.clipHash,
           textPreview: parentClip.content.slice(0, 100),
-          timestamp: ts,
-        })),
+          timestamp: ts
+        }))
       })
     }
 
     return { sources }
   }
 
-  async function handleGenerateBibliography(url: string, format: 'markdown' | 'numbered' | 'plain') {
+  async function handleGenerateBibliography(
+    url: string,
+    format: 'markdown' | 'numbered' | 'plain'
+  ) {
     const { sources } = await handleGetPageSources(url)
 
     if (sources.length === 0) {
@@ -231,7 +243,7 @@ export default defineBackground(() => {
       hostname: message.hostname,
       title: message.title,
       timestamp: Date.now(),
-      textPreview: message.textPreview,
+      textPreview: message.textPreview
     }
 
     chrome.storage.local.get(['recentClips'], (result: Record<string, unknown>) => {
@@ -247,7 +259,7 @@ export default defineBackground(() => {
     storeDocument({
       id: documentId,
       uri: message.url,
-      title: message.title,
+      title: message.title
     }).catch(() => {})
 
     // Store clip as CRP object
@@ -258,7 +270,7 @@ export default defineBackground(() => {
       textHash: message.textHash,
       content: message.fullText,
       createdAt: now,
-      bundleJson: message.bundleJson,
+      bundleJson: message.bundleJson
     }).catch(() => {
       // Best-effort — IndexedDB may be unavailable
     })
@@ -267,7 +279,7 @@ export default defineBackground(() => {
     storeActivity({
       id: `act-copy-${Date.now()}`,
       activityType: 'copy',
-      createdAt: now,
+      createdAt: now
     }).catch(() => {})
 
     // Update badge with count
@@ -289,7 +301,7 @@ export default defineBackground(() => {
     storeDocument({
       id: destDocumentId,
       uri: message.url,
-      title: message.title,
+      title: message.title
     }).catch(() => {})
 
     // The pasted content is a clip on the destination page
@@ -301,47 +313,49 @@ export default defineBackground(() => {
       textHash: message.textHash,
       content: message.textPreview,
       createdAt: now,
-      bundleJson: message.bundleJson,
+      bundleJson: message.bundleJson
     }).catch(() => {})
 
-    findClipsByTextHash(message.textHash).then((matchedClips) => {
-      // Filter out the destination clip we just stored
-      const sourceClips = matchedClips.filter((c) => c.clipHash !== destClipHash)
+    findClipsByTextHash(message.textHash)
+      .then((matchedClips) => {
+        // Filter out the destination clip we just stored
+        const sourceClips = matchedClips.filter((c) => c.clipHash !== destClipHash)
 
-      if (message.bundleJson && sourceClips.length > 0) {
-        // Bundle match — high confidence edge
-        const parentClip = sourceClips[0]
-        storeDerivationEdge({
-          id: `edge-${Date.now()}`,
-          childClipHash: destClipHash,
-          parentClipHash: parentClip.clipHash,
-          transformationType: 'verbatim',
-          confidence: 1.0,
-          createdAt: now,
-        }).catch(() => {})
-      } else if (sourceClips.length > 0) {
-        // Hash match — verbatim with high confidence
-        const parentClip = sourceClips[0]
-        storeDerivationEdge({
-          id: `edge-${Date.now()}`,
-          childClipHash: destClipHash,
-          parentClipHash: parentClip.clipHash,
-          transformationType: 'verbatim',
-          confidence: 0.9,
-          createdAt: now,
-        }).catch(() => {})
-      }
-      // matchMethod 'none' — no edge created
+        if (message.bundleJson && sourceClips.length > 0) {
+          // Bundle match — high confidence edge
+          const parentClip = sourceClips[0]
+          storeDerivationEdge({
+            id: `edge-${Date.now()}`,
+            childClipHash: destClipHash,
+            parentClipHash: parentClip.clipHash,
+            transformationType: 'verbatim',
+            confidence: 1.0,
+            createdAt: now
+          }).catch(() => {})
+        } else if (sourceClips.length > 0) {
+          // Hash match — verbatim with high confidence
+          const parentClip = sourceClips[0]
+          storeDerivationEdge({
+            id: `edge-${Date.now()}`,
+            childClipHash: destClipHash,
+            parentClipHash: parentClip.clipHash,
+            transformationType: 'verbatim',
+            confidence: 0.9,
+            createdAt: now
+          }).catch(() => {})
+        }
+        // matchMethod 'none' — no edge created
 
-      // Store derive activity
-      storeActivity({
-        id: `act-derive-${Date.now()}`,
-        activityType: 'derive',
-        createdAt: now,
-      }).catch(() => {})
-    }).catch(() => {
-      // Best-effort — IndexedDB may be unavailable
-    })
+        // Store derive activity
+        storeActivity({
+          id: `act-derive-${Date.now()}`,
+          activityType: 'derive',
+          createdAt: now
+        }).catch(() => {})
+      })
+      .catch(() => {
+        // Best-effort — IndexedDB may be unavailable
+      })
   }
 
   // Refresh badge when user switches tabs

@@ -1,8 +1,4 @@
-import {
-  createTextHash,
-  createClipHash,
-  toBase64Url,
-} from '@cliproot/protocol/hash'
+import { createTextHash, createClipHash, toBase64Url } from '@cliproot/protocol/hash'
 import { CRP_PROTOCOL_VERSION } from '@cliproot/protocol/schema-meta'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { utf8ToBytes } from '@noble/hashes/utils.js'
@@ -34,14 +30,14 @@ export function buildClipboardBundle(params: {
   const clipHash = createClipHash({
     textHash,
     textQuoteExact: captured.textQuote.exact,
-    sourceRefs: [sourceId],
+    sourceRefs: [sourceId]
   })
 
   const now = new Date().toISOString()
 
   // Build selectors
   const selectors: Record<string, unknown> = {
-    textQuote: captured.textQuote,
+    textQuote: captured.textQuote
   }
 
   if (captured.textPosition) {
@@ -57,7 +53,7 @@ export function buildClipboardBundle(params: {
     clipHash,
     textHash,
     sourceRefs: [sourceId],
-    selectors,
+    selectors
   }
 
   // Build derivationEdges at bundle level instead of clip-level derivedFrom
@@ -68,14 +64,14 @@ export function buildClipboardBundle(params: {
       childClipHash: clipHash,
       parentClipHash: parentHash,
       transformationType: 'verbatim',
-      createdAt: now,
+      createdAt: now
     }))
   }
 
   // Build document
   const document: Record<string, unknown> = {
     id: documentId,
-    uri: documentInfo.uri,
+    uri: documentInfo.uri
   }
   if (documentInfo.title) {
     document.title = documentInfo.title
@@ -89,11 +85,11 @@ export function buildClipboardBundle(params: {
     sources: [
       {
         id: sourceId,
-        sourceType: 'unknown',
-      },
+        sourceType: 'unknown'
+      }
     ],
     clips: [clip],
-    ...(derivationEdges ? { derivationEdges } : {}),
+    ...(derivationEdges ? { derivationEdges } : {})
   } as CrpBundle
 
   return bundle

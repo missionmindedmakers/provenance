@@ -4,7 +4,7 @@ import { SourceBadge } from './Badge'
 export function ClipDetail() {
   const selectedHash = useBundleStore((s) => s.selectedClipHash)
   const clip = useBundleStore((s) =>
-    s.selectedClipHash ? s.clips.get(s.selectedClipHash) : undefined,
+    s.selectedClipHash ? s.clips.get(s.selectedClipHash) : undefined
   )
   const agents = useBundleStore((s) => s.agents)
   const activities = useBundleStore((s) => s.activities)
@@ -17,20 +17,14 @@ export function ClipDetail() {
     )
   }
 
-  const activity = clip.createdByActivityId
-    ? activities.get(clip.createdByActivityId)
-    : undefined
-  const activityAgent = activity?.agentId
-    ? agents.get(activity.agentId)
-    : undefined
+  const activity = clip.createdByActivityId ? activities.get(clip.createdByActivityId) : undefined
+  const activityAgent = activity?.agentId ? agents.get(activity.agentId) : undefined
 
   return (
     <div className="space-y-4 overflow-y-auto p-4">
       {/* Hash */}
       <Section title="Clip Hash">
-        <code className="break-all text-sm text-indigo-300">
-          {clip.clipHash}
-        </code>
+        <code className="break-all text-sm text-indigo-300">{clip.clipHash}</code>
         {clip.id && (
           <p className="mt-1 text-sm text-gray-400">
             ID: <code>{clip.id}</code>
@@ -62,9 +56,7 @@ export function ClipDetail() {
               )}
               <p className="text-gray-300">
                 exact:{' '}
-                <span className="font-medium">
-                  &ldquo;{clip.selectors.textQuote.exact}&rdquo;
-                </span>
+                <span className="font-medium">&ldquo;{clip.selectors.textQuote.exact}&rdquo;</span>
               </p>
               {clip.selectors.textQuote.suffix && (
                 <p className="text-gray-500">
@@ -94,19 +86,12 @@ export function ClipDetail() {
       {clip.resolvedSources.length > 0 && (
         <Section title="Sources">
           {clip.resolvedSources.map((src) => {
-            const author = src.authorAgentId
-              ? agents.get(src.authorAgentId)
-              : undefined
+            const author = src.authorAgentId ? agents.get(src.authorAgentId) : undefined
             return (
-              <div
-                key={src.id}
-                className="rounded bg-gray-800/50 p-2 text-sm space-y-1"
-              >
+              <div key={src.id} className="rounded bg-gray-800/50 p-2 text-sm space-y-1">
                 <div className="flex items-center gap-2">
                   <SourceBadge type={src.sourceType} />
-                  {src.title && (
-                    <span className="text-gray-300">{src.title}</span>
-                  )}
+                  {src.title && <span className="text-gray-300">{src.title}</span>}
                 </div>
                 {src.sourceUri && (
                   <a
@@ -123,9 +108,7 @@ export function ClipDetail() {
                     Author: {author.name ?? author.id} ({author.agentType})
                   </p>
                 )}
-                {src.createdAt && (
-                  <p className="text-gray-600 text-xs">{src.createdAt}</p>
-                )}
+                {src.createdAt && <p className="text-gray-600 text-xs">{src.createdAt}</p>}
               </div>
             )
           })}
@@ -137,13 +120,10 @@ export function ClipDetail() {
         <Section title="Activity">
           <div className="text-sm space-y-1">
             <p className="text-gray-300">
-              Type:{' '}
-              <code className="text-amber-300">{activity.activityType}</code>
+              Type: <code className="text-amber-300">{activity.activityType}</code>
             </p>
             {activityAgent && (
-              <p className="text-gray-400">
-                Agent: {activityAgent.name ?? activityAgent.id}
-              </p>
+              <p className="text-gray-400">Agent: {activityAgent.name ?? activityAgent.id}</p>
             )}
             <p className="text-gray-600 text-xs">{activity.createdAt}</p>
           </div>
@@ -158,18 +138,10 @@ export function ClipDetail() {
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
-        {title}
-      </h3>
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">{title}</h3>
       {children}
     </div>
   )

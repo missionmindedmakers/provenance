@@ -27,9 +27,9 @@ export async function writeCustomFormatToClipboard(
         'text/plain': new Blob([text], { type: 'text/plain' }),
         'text/html': new Blob([htmlWithBundle], { type: 'text/html' }),
         'web application/x-cliproot+json': new Blob([JSON.stringify(bundle)], {
-          type: 'application/json',
-        }),
-      }),
+          type: 'application/json'
+        })
+      })
     ])
     return true
   } catch {
@@ -72,8 +72,5 @@ export function writeProvenanceToClipboard(
 }
 
 function escapeHtmlContent(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }

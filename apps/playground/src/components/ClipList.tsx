@@ -18,10 +18,7 @@ export function ClipList() {
       <div className="space-y-0.5">
         {clipArray.map((clip) => {
           const isSelected = selectedClipHash === clip.clipHash
-          const preview =
-            clip.content ??
-            clip.selectors?.textQuote?.exact ??
-            '(no content)'
+          const preview = clip.content ?? clip.selectors?.textQuote?.exact ?? '(no content)'
           const sourceType = clip.resolvedSources[0]?.sourceType
           const sourceUri = clip.resolvedSources[0]?.sourceUri
 
@@ -30,21 +27,15 @@ export function ClipList() {
               key={clip.clipHash}
               onClick={() => selectClip(clip.clipHash)}
               className={`w-full text-left rounded px-2 py-1.5 text-sm transition-colors ${
-                isSelected
-                  ? 'bg-indigo-900/50 ring-1 ring-indigo-500/50'
-                  : 'hover:bg-gray-800/50'
+                isSelected ? 'bg-indigo-900/50 ring-1 ring-indigo-500/50' : 'hover:bg-gray-800/50'
               }`}
             >
               <div className="flex items-center gap-2">
-                <code className="shrink-0 text-xs text-gray-500">
-                  {clip.clipHash.slice(7, 19)}
-                </code>
+                <code className="shrink-0 text-xs text-gray-500">{clip.clipHash.slice(7, 19)}</code>
                 {sourceType && <SourceBadge type={sourceType} />}
               </div>
               <p className="mt-0.5 truncate text-gray-300">{preview}</p>
-              {sourceUri && (
-                <p className="truncate text-xs text-gray-600">{sourceUri}</p>
-              )}
+              {sourceUri && <p className="truncate text-xs text-gray-600">{sourceUri}</p>}
             </button>
           )
         })}

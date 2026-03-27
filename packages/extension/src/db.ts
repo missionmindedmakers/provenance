@@ -122,7 +122,9 @@ export async function getClipByHash(clipHash: string): Promise<StoredClip | unde
   })
 }
 
-export async function findEdgesByParentClipHash(parentClipHash: string): Promise<StoredDerivationEdge[]> {
+export async function findEdgesByParentClipHash(
+  parentClipHash: string
+): Promise<StoredDerivationEdge[]> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
     const tx = db.transaction('derivationEdges', 'readonly')
@@ -134,7 +136,9 @@ export async function findEdgesByParentClipHash(parentClipHash: string): Promise
   })
 }
 
-export async function findEdgesByChildClipHash(childClipHash: string): Promise<StoredDerivationEdge[]> {
+export async function findEdgesByChildClipHash(
+  childClipHash: string
+): Promise<StoredDerivationEdge[]> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
     const tx = db.transaction('derivationEdges', 'readonly')

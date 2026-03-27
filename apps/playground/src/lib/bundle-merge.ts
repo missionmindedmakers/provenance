@@ -14,7 +14,12 @@ export interface MergedClip {
     textQuote?: { exact: string; prefix?: string; suffix?: string }
     textPosition?: { start: number; end: number }
     editorPath?: string
-    dom?: { provenanceAttribute?: string; elementId?: string; cssSelector?: string; classPath?: string }
+    dom?: {
+      provenanceAttribute?: string
+      elementId?: string
+      cssSelector?: string
+      classPath?: string
+    }
     mediaTime?: { startMs: number; endMs: number; track?: string; transcriptCueId?: string }
     parentClipHash?: string
   }
@@ -66,9 +71,7 @@ export interface MergedState {
   activities: Map<string, ResolvedActivity>
 }
 
-export function mergeBundles(
-  bundles: Map<string, CrpBundle>,
-): MergedState {
+export function mergeBundles(bundles: Map<string, CrpBundle>): MergedState {
   const clips = new Map<string, MergedClip>()
   const edgeMap = new Map<string, MergedEdge>()
   const agents = new Map<string, ResolvedAgent>()
@@ -84,7 +87,7 @@ export function mergeBundles(
             id: agent.id,
             agentType: agent.agentType,
             name: agent.name,
-            uri: agent.uri,
+            uri: agent.uri
           })
         }
       }
@@ -100,7 +103,7 @@ export function mergeBundles(
             title: src.title,
             sourceUri: src.sourceUri,
             authorAgentId: src.authorAgentId,
-            createdAt: src.createdAt,
+            createdAt: src.createdAt
           })
         }
       }
@@ -114,7 +117,7 @@ export function mergeBundles(
             id: act.id,
             activityType: act.activityType,
             agentId: act.agentId,
-            createdAt: act.createdAt,
+            createdAt: act.createdAt
           })
         }
       }
@@ -138,7 +141,7 @@ export function mergeBundles(
             selectors: clip.selectors,
             createdByActivityId: clip.createdByActivityId,
             resolvedSources,
-            bundleKey,
+            bundleKey
           })
         }
       }
@@ -155,7 +158,7 @@ export function mergeBundles(
             transformationType: edge.transformationType,
             agentId: edge.agentId,
             confidence: edge.confidence,
-            createdAt: edge.createdAt,
+            createdAt: edge.createdAt
           })
         }
       }
@@ -167,6 +170,6 @@ export function mergeBundles(
     edges: Array.from(edgeMap.values()),
     agents,
     sources,
-    activities,
+    activities
   }
 }

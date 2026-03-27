@@ -30,7 +30,7 @@ export function captureSelection(selection: Selection, doc: Document): CapturedS
 
   const result: CapturedSelection = {
     text: exact,
-    textQuote,
+    textQuote
   }
 
   if (textPosition) {
@@ -44,10 +44,7 @@ export function captureSelection(selection: Selection, doc: Document): CapturedS
   return result
 }
 
-function computeTextPosition(
-  range: Range,
-  root: Node
-): { start: number; end: number } | undefined {
+function computeTextPosition(range: Range, root: Node): { start: number; end: number } | undefined {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
   let charOffset = 0
   let start: number | undefined

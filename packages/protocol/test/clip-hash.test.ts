@@ -11,8 +11,16 @@ describe('createClipHash', () => {
   })
 
   it('is insensitive to sourceRefs ordering', () => {
-    const a = createClipHash({ textHash, textQuoteExact: 'Hello, world!', sourceRefs: ['src-2', 'src-1'] })
-    const b = createClipHash({ textHash, textQuoteExact: 'Hello, world!', sourceRefs: ['src-1', 'src-2'] })
+    const a = createClipHash({
+      textHash,
+      textQuoteExact: 'Hello, world!',
+      sourceRefs: ['src-2', 'src-1']
+    })
+    const b = createClipHash({
+      textHash,
+      textQuoteExact: 'Hello, world!',
+      sourceRefs: ['src-1', 'src-2']
+    })
     expect(a).toBe(b)
   })
 
@@ -32,7 +40,7 @@ describe('createClipHash', () => {
     const hash = createClipHash({
       textHash: knownTextHash,
       textQuoteExact: 'Test content',
-      sourceRefs: ['source-a'],
+      sourceRefs: ['source-a']
     })
     // Deterministic — this value is stable across runs
     expect(hash).toMatch(/^sha256-/)
@@ -42,7 +50,7 @@ describe('createClipHash', () => {
     const hash2 = createClipHash({
       textHash: knownTextHash,
       textQuoteExact: 'Test content',
-      sourceRefs: ['source-a'],
+      sourceRefs: ['source-a']
     })
     expect(hash).toBe(hash2)
   })

@@ -13,7 +13,7 @@ const SOURCE_TYPE_COLORS: Record<string, string> = {
   'ai-generated': '#3b1f5e',
   'ai-assisted': '#2d1854',
   'external-quoted': '#4a3318',
-  unknown: '#1f2937',
+  unknown: '#1f2937'
 }
 
 const SOURCE_TYPE_STROKES: Record<string, string> = {
@@ -21,7 +21,7 @@ const SOURCE_TYPE_STROKES: Record<string, string> = {
   'ai-generated': '#a855f7',
   'ai-assisted': '#8b5cf6',
   'external-quoted': '#f59e0b',
-  unknown: '#6b7280',
+  unknown: '#6b7280'
 }
 
 const pathGenerator = line().curve(curveBumpY)
@@ -77,21 +77,19 @@ export function ProvenanceDag() {
 function DagNode({
   node,
   isSelected,
-  onClick,
+  onClick
 }: {
   node: LayoutNode
   isSelected: boolean
   onClick: () => void
 }) {
-  const sourceType =
-    node.clip?.resolvedSources[0]?.sourceType ?? 'unknown'
+  const sourceType = node.clip?.resolvedSources[0]?.sourceType ?? 'unknown'
   const fill = SOURCE_TYPE_COLORS[sourceType] ?? SOURCE_TYPE_COLORS.unknown!
   const stroke = isSelected
     ? '#818cf8'
     : (SOURCE_TYPE_STROKES[sourceType] ?? SOURCE_TYPE_STROKES.unknown!)
 
-  const content =
-    node.clip?.content ?? node.clip?.selectors?.textQuote?.exact ?? ''
+  const content = node.clip?.content ?? node.clip?.selectors?.textQuote?.exact ?? ''
   const preview = content.length > 50 ? content.slice(0, 47) + '...' : content
   const hashLabel = node.id.slice(7, 19)
 
@@ -110,31 +108,14 @@ function DagNode({
         strokeWidth={isSelected ? 2 : 1}
         opacity={node.clip ? 1 : 0.4}
       />
-      <text
-        x={8}
-        y={18}
-        fontSize={10}
-        fontFamily="monospace"
-        fill="#9ca3af"
-      >
+      <text x={8} y={18} fontSize={10} fontFamily="monospace" fill="#9ca3af">
         {hashLabel}
       </text>
-      <text
-        x={8}
-        y={34}
-        fontSize={11}
-        fill="#e5e7eb"
-        className="select-none"
-      >
+      <text x={8} y={34} fontSize={11} fill="#e5e7eb" className="select-none">
         {preview || (node.clip ? '(empty)' : '(external)')}
       </text>
       {sourceType !== 'unknown' && (
-        <text
-          x={8}
-          y={50}
-          fontSize={9}
-          fill={SOURCE_TYPE_STROKES[sourceType] ?? '#6b7280'}
-        >
+        <text x={8} y={50} fontSize={9} fill={SOURCE_TYPE_STROKES[sourceType] ?? '#6b7280'}>
           {sourceType}
         </text>
       )}
@@ -153,20 +134,8 @@ function DagEdge({ edge }: { edge: LayoutEdge }) {
 
   return (
     <g>
-      <path
-        d={d}
-        fill="none"
-        stroke="#4b5563"
-        strokeWidth={1.5}
-        markerEnd="url(#arrowhead)"
-      />
-      <text
-        x={midPoint[0]}
-        y={midPoint[1] - 6}
-        textAnchor="middle"
-        fontSize={9}
-        fill="#9ca3af"
-      >
+      <path d={d} fill="none" stroke="#4b5563" strokeWidth={1.5} markerEnd="url(#arrowhead)" />
+      <text x={midPoint[0]} y={midPoint[1] - 6} textAnchor="middle" fontSize={9} fill="#9ca3af">
         {edge.edge.transformationType}
       </text>
     </g>

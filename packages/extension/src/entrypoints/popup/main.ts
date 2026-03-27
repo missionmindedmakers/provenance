@@ -6,7 +6,7 @@ import type {
   GetClipDetailResponse,
   SearchClipsResponse,
   StoredClip,
-  StoredDerivationEdge,
+  StoredDerivationEdge
 } from '../../types'
 
 const statusEl = document.getElementById('status')!
@@ -249,13 +249,10 @@ function handleSearchInput() {
   }
 
   searchDebounce = setTimeout(() => {
-    chrome.runtime.sendMessage(
-      { type: 'search-clips', query },
-      (response: SearchClipsResponse) => {
-        if (!response) return
-        renderSearchResults(response.clips as StoredClip[])
-      }
-    )
+    chrome.runtime.sendMessage({ type: 'search-clips', query }, (response: SearchClipsResponse) => {
+      if (!response) return
+      renderSearchResults(response.clips as StoredClip[])
+    })
   }, 300)
 }
 
@@ -296,13 +293,16 @@ detailBackBtn.addEventListener('click', hideClipDetail)
 searchInput.addEventListener('input', handleSearchInput)
 
 function loadState() {
-  chrome.storage.local.get(['enabled', 'siteSettings', 'recentClips'], (result: Record<string, unknown>) => {
-    globalEnabled = result.enabled !== false
-    siteSettings = (result.siteSettings as Record<string, boolean | 'default'>) ?? {}
-    updateGlobalUI(globalEnabled)
-    updateSiteUI()
-    renderRecentClips((result.recentClips as RecentClip[]) ?? [])
-  })
+  chrome.storage.local.get(
+    ['enabled', 'siteSettings', 'recentClips'],
+    (result: Record<string, unknown>) => {
+      globalEnabled = result.enabled !== false
+      siteSettings = (result.siteSettings as Record<string, boolean | 'default'>) ?? {}
+      updateGlobalUI(globalEnabled)
+      updateSiteUI()
+      renderRecentClips((result.recentClips as RecentClip[]) ?? [])
+    }
+  )
 }
 
 // Listen for storage changes

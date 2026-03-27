@@ -9,7 +9,7 @@ function createMockDataTransfer(): DataTransfer {
     },
     setData(type: string, value: string) {
       data.set(type, value)
-    },
+    }
   } as unknown as DataTransfer
 }
 
@@ -22,10 +22,10 @@ const mockBundle: CrpBundle = {
       clipHash: 'sha256-test',
       textHash: 'sha256-test',
       sourceRefs: ['src-1'],
-      selectors: { textQuote: { exact: 'test' } },
-    },
+      selectors: { textQuote: { exact: 'test' } }
+    }
   ],
-  sources: [{ id: 'src-1', sourceType: 'unknown' }],
+  sources: [{ id: 'src-1', sourceType: 'unknown' }]
 } as CrpBundle
 
 describe('writeProvenanceToClipboard', () => {
