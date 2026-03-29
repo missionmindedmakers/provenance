@@ -56,25 +56,26 @@ describe('buildClipboardBundle', () => {
     })
   })
 
-  it('includes derivationEdges when derivedFromClipHashes provided', () => {
+  it('includes edges when derivedFromClipHashes provided', () => {
     const bundle = buildClipboardBundle({
       captured,
       documentInfo,
       derivedFromClipHashes: ['sha256-abc123']
     })
-    const edges = bundle.derivationEdges as Record<string, unknown>[] | undefined
+    const edges = bundle.edges as Record<string, unknown>[] | undefined
     expect(edges).toBeDefined()
     expect(edges).toHaveLength(1)
-    expect(edges![0].parentClipHash).toBe('sha256-abc123')
+    expect(edges![0].edgeType).toBe('wasDerivedFrom')
+    expect(edges![0].objectRef).toBe('sha256-abc123')
     expect(edges![0].transformationType).toBe('verbatim')
     // clip should NOT have derivedFrom
     const clip = (bundle.clips as Record<string, unknown>[])[0]!
     expect(clip.derivedFrom).toBeUndefined()
   })
 
-  it('omits derivationEdges when not provided', () => {
+  it('omits edges when not provided', () => {
     const bundle = buildClipboardBundle({ captured, documentInfo })
-    expect(bundle.derivationEdges).toBeUndefined()
+    expect(bundle.edges).toBeUndefined()
   })
 
   it('produces valid bundle without optional fields', () => {

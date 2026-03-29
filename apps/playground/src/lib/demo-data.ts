@@ -1,8 +1,15 @@
-/** Inline demo bundle matching the CRP v0.0.2 schema example. */
+/** Inline demo bundle matching the CRP v0.0.3 schema example. */
 export const DEMO_BUNDLE = {
-  protocolVersion: '0.0.2' as const,
+  protocolVersion: '0.0.3' as const,
   bundleType: 'document' as const,
   createdAt: '2026-03-07T20:30:00Z',
+  project: {
+    id: 'proj_auth_refactor',
+    name: 'Auth Refactor',
+    description: 'Research and implementation context for OAuth PKCE',
+    createdAt: '2026-03-07T19:55:00Z',
+    updatedAt: '2026-03-07T20:30:00Z'
+  },
   document: {
     id: 'doc_01',
     uri: 'https://example.com/docs/doc_01',
@@ -34,6 +41,7 @@ export const DEMO_BUNDLE = {
     {
       clipHash: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       id: 'clip_01',
+      projectId: 'proj_auth_refactor',
       documentId: 'doc_01',
       sourceRefs: ['src_01'],
       selectors: {
@@ -49,6 +57,7 @@ export const DEMO_BUNDLE = {
     {
       clipHash: 'sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
       id: 'clip_02',
+      projectId: 'proj_auth_refactor',
       documentId: 'doc_01',
       sourceRefs: ['src_01'],
       selectors: {
@@ -65,6 +74,7 @@ export const DEMO_BUNDLE = {
     {
       clipHash: 'sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
       id: 'clip_03',
+      projectId: 'proj_auth_refactor',
       documentId: 'doc_01',
       sourceRefs: ['src_02'],
       selectors: {
@@ -77,18 +87,40 @@ export const DEMO_BUNDLE = {
       createdByActivityId: 'act_03'
     }
   ],
-  derivationEdges: [
+  artifacts: [
+    {
+      artifactHash: 'sha256-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH',
+      id: 'artifact_plan_md',
+      projectId: 'proj_auth_refactor',
+      artifactType: 'markdown' as const,
+      fileName: 'plan.md',
+      mimeType: 'text/markdown',
+      byteSize: 42,
+      contentBase64: 'IyBQbGFuCgotIFJlc2VhcmNoCi0gSW1wbGVtZW50Cg==',
+      createdAt: '2026-03-07T20:20:00Z'
+    }
+  ],
+  clipArtifactRefs: [
+    {
+      clipHash: 'sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+      artifactHash: 'sha256-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH',
+      relationship: 'cited_in' as const
+    }
+  ],
+  edges: [
     {
       id: 'edge_01',
-      childClipHash: 'sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
-      parentClipHash: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      edgeType: 'wasDerivedFrom' as const,
+      subjectRef: 'sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+      objectRef: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       transformationType: 'edit' as const,
       createdAt: '2026-03-07T20:05:00Z'
     },
     {
       id: 'edge_02',
-      childClipHash: 'sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-      parentClipHash: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+      edgeType: 'wasDerivedFrom' as const,
+      subjectRef: 'sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+      objectRef: 'sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
       transformationType: 'summary' as const,
       agentId: 'agent_claude',
       createdAt: '2026-03-07T20:10:00Z'
@@ -97,27 +129,34 @@ export const DEMO_BUNDLE = {
   activities: [
     {
       id: 'act_01',
-      activityType: 'create' as const,
+      projectId: 'proj_auth_refactor',
+      activityType: 'research' as const,
       agentId: 'agent_alice',
       usedSourceRefs: ['src_01'],
       generatedClipRefs: ['clip_01'],
-      createdAt: '2026-03-07T20:01:00Z'
+      createdAt: '2026-03-07T20:01:00Z',
+      endedAt: '2026-03-07T20:02:00Z'
     },
     {
       id: 'act_02',
-      activityType: 'edit' as const,
+      projectId: 'proj_auth_refactor',
+      activityType: 'plan' as const,
       agentId: 'agent_alice',
+      prompt: 'Turn the research clips into a concise implementation plan.',
       usedSourceRefs: ['src_01'],
       generatedClipRefs: ['clip_02'],
-      createdAt: '2026-03-07T20:05:00Z'
+      createdAt: '2026-03-07T20:05:00Z',
+      endedAt: '2026-03-07T20:06:00Z'
     },
     {
       id: 'act_03',
+      projectId: 'proj_auth_refactor',
       activityType: 'ai_generate' as const,
       agentId: 'agent_claude',
       usedSourceRefs: ['src_02'],
       generatedClipRefs: ['clip_03'],
-      createdAt: '2026-03-07T20:10:00Z'
+      createdAt: '2026-03-07T20:10:00Z',
+      endedAt: '2026-03-07T20:11:00Z'
     }
   ],
   reuseEvents: [],

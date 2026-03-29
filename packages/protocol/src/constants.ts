@@ -4,9 +4,8 @@ export type BundleType = CrpBundle['bundleType']
 export type SourceType = NonNullable<CrpBundle['sources']>[number]['sourceType']
 export type AgentType = NonNullable<CrpBundle['agents']>[number]['agentType']
 export type ActivityType = NonNullable<CrpBundle['activities']>[number]['activityType']
-export type TransformationType = NonNullable<
-  CrpBundle['derivationEdges']
->[number]['transformationType']
+export type EdgeType = NonNullable<CrpBundle['edges']>[number]['edgeType']
+export type TransformationType = NonNullable<CrpBundle['edges']>[number]['transformationType']
 
 export const BUNDLE_TYPES: readonly BundleType[] = [
   'document',
@@ -38,7 +37,18 @@ export const ACTIVITY_TYPES: readonly ActivityType[] = [
   'reuse_detected',
   'reuse_notified',
   'copy',
-  'derive'
+  'derive',
+  'research',
+  'plan',
+  'review'
+]
+export const EDGE_TYPES: readonly EdgeType[] = [
+  'wasDerivedFrom',
+  'wasGeneratedBy',
+  'used',
+  'wasAttributedTo',
+  'wasAssociatedWith',
+  'actedOnBehalfOf'
 ]
 export const TRANSFORMATION_TYPES: readonly TransformationType[] = [
   'verbatim',

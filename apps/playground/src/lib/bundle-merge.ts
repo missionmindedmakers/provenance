@@ -64,15 +64,19 @@ export interface ResolvedAgent {
 export interface ResolvedActivity {
   id: string
   activityType: string
+  projectId?: string
   agentId?: string
+  prompt?: string
   createdAt: string
+  endedAt?: string
 }
 
 export interface MergedEdge {
   id: string
-  childClipHash: string
-  parentClipHash: string
-  transformationType: string
+  edgeType: string
+  subjectRef: string
+  objectRef: string
+  transformationType?: string
   agentId?: string
   confidence?: number
   createdAt: string
@@ -145,8 +149,11 @@ export function mergeBundles(bundles: Map<string, CrpBundle>): MergedState {
           activities.set(act.id, {
             id: act.id,
             activityType: act.activityType,
+            projectId: act.projectId,
             agentId: act.agentId,
-            createdAt: act.createdAt
+            prompt: act.prompt,
+            createdAt: act.createdAt,
+            endedAt: act.endedAt
           })
         }
       }
@@ -180,14 +187,15 @@ export function mergeBundles(bundles: Map<string, CrpBundle>): MergedState {
       }
     }
 
-    // Collect derivation edges
-    if (bundle.derivationEdges) {
-      for (const edge of bundle.derivationEdges) {
+    // Collect generalized edges
+    if (bundle.edges) {
+      for (const edge of bundle.edges) {
         if (!edgeMap.has(edge.id)) {
           edgeMap.set(edge.id, {
             id: edge.id,
-            childClipHash: edge.childClipHash,
-            parentClipHash: edge.parentClipHash,
+            edgeType: edge.edgeType,
+            subjectRef: edge.subjectRef,
+            objectRef: edge.objectRef,
             transformationType: edge.transformationType,
             agentId: edge.agentId,
             confidence: edge.confidence,
