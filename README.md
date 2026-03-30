@@ -9,6 +9,7 @@ The goal is to preserve attribution when people copy, paste, import, and revise 
 This repository is the public ClipRoot monorepo.
 
 It currently includes:
+
 - the CRP (`ClipRoot Protocol`) `v0.0.3` schema and research artifacts,
 - `@cliproot/protocol`, a TypeScript package for schema-backed validation, generated protocol types, and deterministic text hashing,
 - `@cliproot/core`, a browser-compatible SDK for capturing clipboard provenance on copy events,
@@ -21,7 +22,14 @@ It currently includes:
 
 CRP defines structured bundles for provenance exchange across systems.
 
+Cliproot packs are a separate archive format layered on top of CRP bundles. A `.cliprootpack`
+file is a `tar.zst` archive containing `manifest.json`, `objects/*.json` CRP bundle files,
+and raw `artifacts/*` blobs. The standalone manifest schema lives in
+`schema/cliproot-pack-v1.manifest.schema.json`, with a short format note in
+`docs/pack-format.md`.
+
 Current `v0.0.3` bundle types:
+
 - `document`
 - `clipboard`
 - `derivation`
@@ -29,6 +37,7 @@ Current `v0.0.3` bundle types:
 - `reuse-event`
 
 A bundle can include:
+
 - `project` metadata,
 - `document` metadata,
 - `agents` and `sources`,
@@ -37,7 +46,10 @@ A bundle can include:
 - `activities`, generalized `edges`, `reuseEvents`, and optional `signatures`.
 
 The generated schema constants and types are available in:
+
 - `packages/protocol/src/generated/crp-v0.0.3.schema.ts`
+
+Pack manifests are intentionally separate from `@cliproot/protocol` validation in this phase.
 
 ## Monorepo Layout
 
@@ -51,6 +63,7 @@ cliproot/
     tiptap/        # @cliproot/tiptap   — Tiptap attribution extension
     extension/     # @cliproot/extension — Browser extension (WXT, MV3)
   schema/          # canonical schema artifacts and examples
+  docs/            # format notes, including .cliprootpack
   research/        # product/protocol planning notes
 ```
 
@@ -59,11 +72,7 @@ cliproot/
 `@cliproot/core` provides a browser-compatible API for capturing what was selected at the moment of a copy, building a CRP clipboard bundle, and writing it invisibly into the HTML clipboard data.
 
 ```ts
-import {
-  captureSelection,
-  buildClipboardBundle,
-  writeProvenanceToClipboard,
-} from '@cliproot/core'
+import { captureSelection, buildClipboardBundle, writeProvenanceToClipboard } from '@cliproot/core'
 
 document.addEventListener('copy', (event) => {
   const selection = document.getSelection()
@@ -76,8 +85,8 @@ document.addEventListener('copy', (event) => {
     captured,
     documentInfo: {
       uri: window.location.href,
-      title: document.title,
-    },
+      title: document.title
+    }
   })
 
   writeProvenanceToClipboard(bundle, event.clipboardData)

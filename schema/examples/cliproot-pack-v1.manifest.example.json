@@ -1,0 +1,78 @@
+{
+  "format": "cliproot-pack-v1",
+  "createdAt": "2026-03-29T16:40:00Z",
+  "project": {
+    "id": "proj_auth_refactor",
+    "name": "Auth Refactor",
+    "description": "OAuth and PKCE implementation research",
+    "createdAt": "2026-03-29T15:00:00Z",
+    "updatedAt": "2026-03-29T16:35:00Z"
+  },
+  "roots": {
+    "mode": "project",
+    "projectId": "proj_auth_refactor",
+    "clipHashes": [
+      "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+    ]
+  },
+  "counts": {
+    "bundles": 2,
+    "clips": 2,
+    "edges": 1,
+    "artifacts": 2,
+    "links": 1
+  },
+  "objects": [
+    {
+      "bundleHash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "archivePath": "objects/sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.json",
+      "byteSize": 1142,
+      "sha256Digest": "sha256-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+      "clipHashes": ["sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"]
+    },
+    {
+      "bundleHash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "archivePath": "objects/sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.json",
+      "byteSize": 1264,
+      "sha256Digest": "sha256-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+      "clipHashes": ["sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactHash": "sha256-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+      "id": "artifact_research",
+      "projectId": "proj_auth_refactor",
+      "artifactType": "markdown",
+      "fileName": "research.md",
+      "mimeType": "text/markdown",
+      "byteSize": 2048,
+      "sha256Digest": "sha256-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+      "archivePath": "artifacts/sha256-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+      "metadata": {
+        "role": "research-notes"
+      },
+      "createdAt": "2026-03-29T16:20:00Z"
+    },
+    {
+      "artifactHash": "sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "id": "artifact_plan",
+      "projectId": "proj_auth_refactor",
+      "artifactType": "markdown",
+      "fileName": "plan.md",
+      "mimeType": "text/markdown",
+      "byteSize": 1024,
+      "sha256Digest": "sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "archivePath": "artifacts/sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "createdAt": "2026-03-29T16:30:00Z"
+    }
+  ],
+  "clipArtifactRefs": [
+    {
+      "clipHash": "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "artifactHash": "sha256-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "relationship": "cited_in"
+    }
+  ]
+}
