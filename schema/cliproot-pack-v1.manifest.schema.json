@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cliproot.dev/schema/cliproot-pack-v1.manifest.schema.json",
+  "title": "Cliproot Pack Manifest v1",
+  "description": "Manifest for .cliprootpack archives. Packs are tar.zst archives that bundle existing CRP object JSON files plus raw artifact blobs.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "cliproot-pack-v1"
+    },
+    "createdAt": {
+      "$ref": "#/$defs/dateTime"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "roots": {
+      "$ref": "#/$defs/roots"
+    },
+    "counts": {
+      "$ref": "#/$defs/counts"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/objectEntry"
+      },
+      "default": []
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactEntry"
+      },
+      "default": []
+    },
+    "clipArtifactRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/clipArtifactRef"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "format",
+    "createdAt",
+    "roots",
+    "counts",
+    "objects",
+    "artifacts",
+    "clipArtifactRefs"
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "sha256Base64Url": {
+      "type": "string",
+      "pattern": "^sha256-[A-Za-z0-9_-]{43,}$"
+    },
+    "dateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/dateTime"
+        },
+        "updatedAt": {
+          "$ref": "#/$defs/dateTime"
+        }
+      },
+      "required": ["id", "name"]
+    },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["project", "roots"]
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "clipHashes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sha256Base64Url"
+          },
+          "uniqueItems": true,
+          "default": []
+        }
+      },
+      "required": ["mode", "clipHashes"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "project"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "projectId": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "required": ["projectId"]
+          },
+          "else": {
+            "not": {
+              "required": ["projectId"]
+            }
+          }
+        }
+      ]
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clips": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "artifacts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["bundles", "clips", "edges", "artifacts", "links"]
+    },
+    "objectEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundleHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "archivePath": {
+          "type": "string",
+          "pattern": "^objects/.+\\.json$"
+        },
+        "byteSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256Digest": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "clipHashes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sha256Base64Url"
+          },
+          "uniqueItems": true,
+          "default": []
+        }
+      },
+      "required": ["bundleHash", "archivePath", "byteSize", "sha256Digest", "clipHashes"]
+    },
+    "artifactEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifactHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "projectId": {
+          "$ref": "#/$defs/id"
+        },
+        "artifactType": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "prompt",
+            "session",
+            "config",
+            "diagram",
+            "text",
+            "json",
+            "binary",
+            "unknown"
+          ]
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mimeType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "byteSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256Digest": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "archivePath": {
+          "type": "string",
+          "pattern": "^artifacts/.+$"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/dateTime"
+        }
+      },
+      "required": [
+        "artifactHash",
+        "artifactType",
+        "fileName",
+        "mimeType",
+        "byteSize",
+        "sha256Digest",
+        "archivePath"
+      ]
+    },
+    "clipArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clipHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "artifactHash": {
+          "$ref": "#/$defs/sha256Base64Url"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": ["generated_from", "cited_in", "prompt_for", "attached_to", "unknown"]
+        }
+      },
+      "required": ["clipHash", "artifactHash", "relationship"]
+    }
+  }
+}

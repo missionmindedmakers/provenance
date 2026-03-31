@@ -11,13 +11,13 @@ import type {
 import {
   storeClip,
   storeDocument,
-  storeDerivationEdge,
+  storeEdge,
   storeActivity,
   findClipsByTextHash,
   findClipsByDocumentId,
   findDocumentsByUri,
-  findEdgesByChildClipHash,
-  findEdgesByParentClipHash,
+  findEdgesBySubjectRef,
+  findEdgesByObjectRef,
   getClipByHash,
   getDocumentById,
   searchClips
@@ -130,7 +130,7 @@ export default defineBackground(() => {
    * Find the provenance sources for content pasted on a given page URL.
    *
    * Query path (all indexed):
-   *   documents(uri=url) → clips(documentId) → derivationEdges(childClipHash)
+   *   documents(uri=url) → clips(documentId) → edges(subjectRef)
    *     → parent clips → parent documents (for URL/title)
    */
   async function handleGetPageSources(url: string) {
@@ -148,15 +148,17 @@ export default defineBackground(() => {
     >()
 
     for (const child of childClips) {
-      const edges = await findEdgesByChildClipHash(child.clipHash)
+      const edges = (await findEdgesBySubjectRef(child.clipHash)).filter(
+        (edge) => edge.edgeType === 'wasDerivedFrom'
+      )
       for (const edge of edges) {
-        const existing = edgesByParent.get(edge.parentClipHash)
+        const existing = edgesByParent.get(edge.objectRef)
         if (existing) {
           existing.count++
           existing.timestamps.push(new Date(edge.createdAt).getTime())
         } else {
-          edgesByParent.set(edge.parentClipHash, {
-            parentClipHash: edge.parentClipHash,
+          edgesByParent.set(edge.objectRef, {
+            parentClipHash: edge.objectRef,
             count: 1,
             timestamps: [new Date(edge.createdAt).getTime()]
           })
@@ -220,7 +222,9 @@ export default defineBackground(() => {
 
   async function handleGetClipDetail(clipHash: string) {
     const clip = (await getClipByHash(clipHash)) ?? null
-    const edges = clip ? await findEdgesByParentClipHash(clipHash) : []
+    const edges = clip
+      ? (await findEdgesByObjectRef(clipHash)).filter((edge) => edge.edgeType === 'wasDerivedFrom')
+      : []
     return { clip, edges }
   }
 
@@ -324,10 +328,11 @@ export default defineBackground(() => {
         if (message.bundleJson && sourceClips.length > 0) {
           // Bundle match — high confidence edge
           const parentClip = sourceClips[0]
-          storeDerivationEdge({
+          storeEdge({
             id: `edge-${Date.now()}`,
-            childClipHash: destClipHash,
-            parentClipHash: parentClip.clipHash,
+            edgeType: 'wasDerivedFrom',
+            subjectRef: destClipHash,
+            objectRef: parentClip.clipHash,
             transformationType: 'verbatim',
             confidence: 1.0,
             createdAt: now
@@ -335,10 +340,11 @@ export default defineBackground(() => {
         } else if (sourceClips.length > 0) {
           // Hash match — verbatim with high confidence
           const parentClip = sourceClips[0]
-          storeDerivationEdge({
+          storeEdge({
             id: `edge-${Date.now()}`,
-            childClipHash: destClipHash,
-            parentClipHash: parentClip.clipHash,
+            edgeType: 'wasDerivedFrom',
+            subjectRef: destClipHash,
+            objectRef: parentClip.clipHash,
             transformationType: 'verbatim',
             confidence: 0.9,
             createdAt: now

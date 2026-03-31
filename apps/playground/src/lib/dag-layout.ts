@@ -36,22 +36,23 @@ export function computeDagLayout(
   clips: Map<string, MergedClip>,
   edges: MergedEdge[]
 ): DagLayout | null {
-  if (edges.length === 0) return null
+  const derivationEdges = edges.filter((edge) => edge.edgeType === 'wasDerivedFrom')
+  if (derivationEdges.length === 0) return null
 
   // Collect all clip hashes that participate in edges
   const relevantHashes = new Set<string>()
   const parentMap = new Map<string, Set<string>>()
 
-  for (const edge of edges) {
-    relevantHashes.add(edge.childClipHash)
-    relevantHashes.add(edge.parentClipHash)
+  for (const edge of derivationEdges) {
+    relevantHashes.add(edge.subjectRef)
+    relevantHashes.add(edge.objectRef)
 
-    let parents = parentMap.get(edge.childClipHash)
+    let parents = parentMap.get(edge.subjectRef)
     if (!parents) {
       parents = new Set()
-      parentMap.set(edge.childClipHash, parents)
+      parentMap.set(edge.subjectRef, parents)
     }
-    parents.add(edge.parentClipHash)
+    parents.add(edge.objectRef)
   }
 
   // Build stratify input
@@ -70,8 +71,8 @@ export function computeDagLayout(
 
     // Build edge lookup for metadata
     const edgeLookup = new Map<string, MergedEdge>()
-    for (const edge of edges) {
-      edgeLookup.set(`${edge.parentClipHash}->${edge.childClipHash}`, edge)
+    for (const edge of derivationEdges) {
+      edgeLookup.set(`${edge.objectRef}->${edge.subjectRef}`, edge)
     }
 
     // Extract positioned nodes

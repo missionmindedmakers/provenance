@@ -1,7 +1,7 @@
-import type { StoredClip, StoredDocument, StoredDerivationEdge, StoredActivity } from './types'
+import type { StoredClip, StoredDocument, StoredEdge, StoredActivity } from './types'
 
 const DB_NAME = 'cliproot'
-const DB_VERSION = 3
+const DB_VERSION = 4
 
 let dbInstance: IDBDatabase | null = null
 
@@ -30,12 +30,19 @@ function openDb(): Promise<IDBDatabase> {
         clips.createIndex('textHash', 'textHash', { unique: false })
         clips.createIndex('documentId', 'documentId', { unique: false })
 
-        const edges = db.createObjectStore('derivationEdges', { keyPath: 'id' })
-        edges.createIndex('parentClipHash', 'parentClipHash', { unique: false })
-        edges.createIndex('childClipHash', 'childClipHash', { unique: false })
-
         const activities = db.createObjectStore('activities', { keyPath: 'id' })
         activities.createIndex('createdAt', 'createdAt', { unique: false })
+      }
+
+      if (oldVersion < 4) {
+        if (db.objectStoreNames.contains('derivationEdges')) {
+          db.deleteObjectStore('derivationEdges')
+        }
+        if (!db.objectStoreNames.contains('edges')) {
+          const edges = db.createObjectStore('edges', { keyPath: 'id' })
+          edges.createIndex('objectRef', 'objectRef', { unique: false })
+          edges.createIndex('subjectRef', 'subjectRef', { unique: false })
+        }
       }
     }
 
@@ -77,11 +84,11 @@ export async function storeClip(clip: StoredClip): Promise<void> {
   })
 }
 
-export async function storeDerivationEdge(edge: StoredDerivationEdge): Promise<void> {
+export async function storeEdge(edge: StoredEdge): Promise<void> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('derivationEdges', 'readwrite')
-    const store = tx.objectStore('derivationEdges')
+    const tx = db.transaction('edges', 'readwrite')
+    const store = tx.objectStore('edges')
     const request = store.put(edge)
     request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error)
@@ -122,30 +129,26 @@ export async function getClipByHash(clipHash: string): Promise<StoredClip | unde
   })
 }
 
-export async function findEdgesByParentClipHash(
-  parentClipHash: string
-): Promise<StoredDerivationEdge[]> {
+export async function findEdgesByObjectRef(objectRef: string): Promise<StoredEdge[]> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('derivationEdges', 'readonly')
-    const store = tx.objectStore('derivationEdges')
-    const index = store.index('parentClipHash')
-    const request = index.getAll(parentClipHash)
-    request.onsuccess = () => resolve(request.result as StoredDerivationEdge[])
+    const tx = db.transaction('edges', 'readonly')
+    const store = tx.objectStore('edges')
+    const index = store.index('objectRef')
+    const request = index.getAll(objectRef)
+    request.onsuccess = () => resolve(request.result as StoredEdge[])
     request.onerror = () => reject(request.error)
   })
 }
 
-export async function findEdgesByChildClipHash(
-  childClipHash: string
-): Promise<StoredDerivationEdge[]> {
+export async function findEdgesBySubjectRef(subjectRef: string): Promise<StoredEdge[]> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('derivationEdges', 'readonly')
-    const store = tx.objectStore('derivationEdges')
-    const index = store.index('childClipHash')
-    const request = index.getAll(childClipHash)
-    request.onsuccess = () => resolve(request.result as StoredDerivationEdge[])
+    const tx = db.transaction('edges', 'readonly')
+    const store = tx.objectStore('edges')
+    const index = store.index('subjectRef')
+    const request = index.getAll(subjectRef)
+    request.onsuccess = () => resolve(request.result as StoredEdge[])
     request.onerror = () => reject(request.error)
   })
 }

@@ -9,7 +9,8 @@ The goal is to preserve attribution when people copy, paste, import, and revise 
 This repository is the public ClipRoot monorepo.
 
 It currently includes:
-- the CRP (`ClipRoot Protocol`) `v0.0.2` schema and research artifacts,
+
+- the CRP (`ClipRoot Protocol`) `v0.0.3` schema and research artifacts,
 - `@cliproot/protocol`, a TypeScript package for schema-backed validation, generated protocol types, and deterministic text hashing,
 - `@cliproot/core`, a browser-compatible SDK for capturing clipboard provenance on copy events,
 - `@cliproot/tiptap`, a Tiptap extension for managing span-level provenance and attribution,
@@ -21,19 +22,34 @@ It currently includes:
 
 CRP defines structured bundles for provenance exchange across systems.
 
-Current `v0.0.1` bundle types:
+Cliproot packs are a separate archive format layered on top of CRP bundles. A `.cliprootpack`
+file is a `tar.zst` archive containing `manifest.json`, `objects/*.json` CRP bundle files,
+and raw `artifacts/*` blobs. The standalone manifest schema lives in
+`schema/cliproot-pack-v1.manifest.schema.json`, with a short format note in
+`docs/pack-format.md`.
+
+Current `v0.0.3` bundle types:
+
 - `document`
 - `clipboard`
+- `derivation`
+- `provenance-export`
 - `reuse-event`
 
 A bundle can include:
+
+- `project` metadata,
 - `document` metadata,
 - `agents` and `sources`,
 - `clips` (span-level attribution records with selectors + text hashes),
-- `activities`, `reuseEvents`, and optional `signatures`.
+- `artifacts` and `clipArtifactRefs`,
+- `activities`, generalized `edges`, `reuseEvents`, and optional `signatures`.
 
 The generated schema constants and types are available in:
-- `packages/protocol/src/generated/crp-v0.0.1.schema.ts`
+
+- `packages/protocol/src/generated/crp-v0.0.3.schema.ts`
+
+Pack manifests are intentionally separate from `@cliproot/protocol` validation in this phase.
 
 ## Monorepo Layout
 
@@ -47,6 +63,7 @@ cliproot/
     tiptap/        # @cliproot/tiptap   — Tiptap attribution extension
     extension/     # @cliproot/extension — Browser extension (WXT, MV3)
   schema/          # canonical schema artifacts and examples
+  docs/            # format notes, including .cliprootpack
   research/        # product/protocol planning notes
 ```
 
@@ -55,11 +72,7 @@ cliproot/
 `@cliproot/core` provides a browser-compatible API for capturing what was selected at the moment of a copy, building a CRP clipboard bundle, and writing it invisibly into the HTML clipboard data.
 
 ```ts
-import {
-  captureSelection,
-  buildClipboardBundle,
-  writeProvenanceToClipboard,
-} from '@cliproot/core'
+import { captureSelection, buildClipboardBundle, writeProvenanceToClipboard } from '@cliproot/core'
 
 document.addEventListener('copy', (event) => {
   const selection = document.getSelection()
@@ -72,8 +85,8 @@ document.addEventListener('copy', (event) => {
     captured,
     documentInfo: {
       uri: window.location.href,
-      title: document.title,
-    },
+      title: document.title
+    }
   })
 
   writeProvenanceToClipboard(bundle, event.clipboardData)
@@ -168,7 +181,7 @@ The playground is a standalone web app for inspecting Cliproot provenance withou
 pnpm --filter @cliproot/playground dev
 ```
 
-This starts a Vite dev server at `http://localhost:5173`. Click **Load demo data** to see an example with clips, derivation edges, and a provenance graph.
+This starts a Vite dev server at `http://localhost:5173`. Click **Load demo data** to see an example with project-scoped clips, generalized provenance edges, and linked artifacts.
 
 **Build for deployment:**
 

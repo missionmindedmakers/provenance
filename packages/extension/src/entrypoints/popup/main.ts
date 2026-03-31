@@ -6,7 +6,7 @@ import type {
   GetClipDetailResponse,
   SearchClipsResponse,
   StoredClip,
-  StoredDerivationEdge
+  StoredEdge
 } from '../../types'
 
 const statusEl = document.getElementById('status')!
@@ -166,12 +166,12 @@ function showClipDetail(clipHash: string) {
     { type: 'get-clip-detail', clipHash },
     (response: GetClipDetailResponse) => {
       if (!response || !response.clip) return
-      renderClipDetail(response.clip as StoredClip, response.edges as StoredDerivationEdge[])
+      renderClipDetail(response.clip as StoredClip, response.edges as StoredEdge[])
     }
   )
 }
 
-function renderClipDetail(clip: StoredClip, edges: StoredDerivationEdge[]) {
+function renderClipDetail(clip: StoredClip, edges: StoredEdge[]) {
   // Hide main sections, show detail
   recentClipsSection.style.display = 'none'
   pageSourcesSection.style.display = 'none'

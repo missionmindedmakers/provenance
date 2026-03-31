@@ -27,6 +27,7 @@ export interface StoredDocument {
 
 export interface StoredClip {
   clipHash: string
+  projectId?: string
   documentId: string
   sourceRefs: string[]
   textHash: string
@@ -41,11 +42,12 @@ export interface StoredClip {
   bundleJson: string | null
 }
 
-export interface StoredDerivationEdge {
+export interface StoredEdge {
   id: string
-  childClipHash: string
-  parentClipHash: string
-  transformationType: string
+  edgeType: string
+  subjectRef: string
+  objectRef: string
+  transformationType?: string
   agentId?: string
   confidence?: number
   createdAt: string
@@ -54,8 +56,10 @@ export interface StoredDerivationEdge {
 export interface StoredActivity {
   id: string
   activityType: string
+  projectId?: string
   agentId?: string
   createdAt: string
+  endedAt?: string
 }
 
 export interface RecentClip {
@@ -103,7 +107,7 @@ export interface GetClipDetailRequest {
 
 export interface GetClipDetailResponse {
   clip: StoredClip | null
-  edges: StoredDerivationEdge[]
+  edges: StoredEdge[]
 }
 
 export interface SearchClipsRequest {

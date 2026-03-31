@@ -56,13 +56,14 @@ export function buildClipboardBundle(params: {
     selectors
   }
 
-  // Build derivationEdges at bundle level instead of clip-level derivedFrom
-  let derivationEdges: Record<string, unknown>[] | undefined
+  // Build generalized provenance edges at bundle level.
+  let edges: Record<string, unknown>[] | undefined
   if (derivedFromClipHashes && derivedFromClipHashes.length > 0) {
-    derivationEdges = derivedFromClipHashes.map((parentHash, i) => ({
+    edges = derivedFromClipHashes.map((parentHash, i) => ({
       id: `edge-${i}`,
-      childClipHash: clipHash,
-      parentClipHash: parentHash,
+      edgeType: 'wasDerivedFrom',
+      subjectRef: clipHash,
+      objectRef: parentHash,
       transformationType: 'verbatim',
       createdAt: now
     }))
@@ -78,7 +79,7 @@ export function buildClipboardBundle(params: {
   }
 
   const bundle: CrpBundle = {
-    protocolVersion: CRP_PROTOCOL_VERSION as '0.0.2',
+    protocolVersion: CRP_PROTOCOL_VERSION as '0.0.3',
     bundleType: 'clipboard',
     createdAt: now,
     document,
@@ -91,7 +92,7 @@ export function buildClipboardBundle(params: {
       }
     ],
     clips: [clip],
-    ...(derivationEdges ? { derivationEdges } : {})
+    ...(edges ? { edges } : {})
   } as CrpBundle
 
   return bundle
